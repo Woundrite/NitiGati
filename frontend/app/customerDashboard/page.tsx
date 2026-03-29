@@ -141,9 +141,13 @@ export default function CustomerDashboardPage() {
     const [detailLoading, setDetailLoading] = useState(false);
 
     // Messaging State
-    const [selectedRoom, setSelectedRoom] = useState<CustomerMessage | null>(null);
+    const [selectedRoom, setSelectedRoom] = useState<CustomerMessage | null>(
+        null,
+    );
     const [chatView, setChatView] = useState<ChatViewType>("lobby");
-    const [msgBackView, setMsgBackView] = useState<ViewType | "lobby" | null>(null);
+    const [msgBackView, setMsgBackView] = useState<ViewType | "lobby" | null>(
+        null,
+    );
 
     // Redirect if not logged in
     useEffect(() => {
@@ -280,17 +284,20 @@ export default function CustomerDashboardPage() {
     const handleInitiateChat = async (providerId: string) => {
         if (!sessionManager.isLoggedIn) return;
         const token = sessionManager.getToken();
-        
+
         try {
-            const res = await fetch("/api/customer/customerDashboard/messages", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Token ${token}`,
+            const res = await fetch(
+                "/api/customer/customerDashboard/messages",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Token ${token}`,
+                    },
+                    body: JSON.stringify({ provider_id: providerId }),
                 },
-                body: JSON.stringify({ provider_id: providerId }),
-            });
-            
+            );
+
             if (res.ok) {
                 const room = await res.json();
                 setSelectedRoom(room);
@@ -340,19 +347,21 @@ export default function CustomerDashboardPage() {
         switch (activeView) {
             case "dashboard":
                 return dashboardData ? (
-                    <Dashboard 
-                        data={dashboardData} 
+                    <Dashboard
+                        data={dashboardData}
                         onMessageProvider={() => setActiveView("messages")}
                     />
                 ) : null;
             case "orders":
-                return <CustomerOrders orders={orders} loading={ordersLoading} />;
+                return (
+                    <CustomerOrders orders={orders} loading={ordersLoading} />
+                );
             case "transactions":
                 return <CustomerTransactions transactions={transactions} />;
             case "messages":
                 return (
-                    <CustomerMessages 
-                        messages={messages} 
+                    <CustomerMessages
+                        messages={messages}
                         view={chatView}
                         selectedRoom={selectedRoom}
                         onBackToLobby={() => {
@@ -368,7 +377,9 @@ export default function CustomerDashboardPage() {
                         }}
                         userName={dashboardData?.user_name || ""}
                         token={sessionManager.getToken() || ""}
-                        onExploreServices={() => handleViewChange("discover services")}
+                        onExploreServices={() =>
+                            handleViewChange("discover services")
+                        }
                     />
                 );
             case "discover services":
@@ -536,6 +547,11 @@ export default function CustomerDashboardPage() {
                         <input
                             type="text"
                             placeholder="Search, providers, or orders..."
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    router.push("/serviceMarket");
+                                }
+                            }}
                             className="w-full h-12 bg-zinc-50 rounded-2xl pl-14 pr-6 border-2 border-transparent focus:border-emerald-500/20 focus:bg-white focus:ring-4 focus:ring-emerald-500/5 transition-all text-sm font-bold text-zinc-700 outline-none placeholder:text-zinc-300"
                         />
                     </div>
@@ -555,7 +571,9 @@ export default function CustomerDashboardPage() {
                     </div>
                 </header>
 
-                <div className={`mx-auto w-full ${activeView === "messages" && chatView === "room" ? "p-0 h-[calc(100vh-6rem)] overflow-hidden" : "p-10 max-w-7xl"}`}>
+                <div
+                    className={`mx-auto w-full ${activeView === "messages" && chatView === "room" ? "p-0 h-[calc(100vh-6rem)] overflow-hidden" : "p-10 max-w-7xl"}`}
+                >
                     {(activeView !== "messages" || chatView !== "room") && (
                         <div className="mb-12">
                             <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-2">

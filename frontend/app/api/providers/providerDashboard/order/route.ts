@@ -10,7 +10,7 @@ export async function GET(request: Request) {
         const response = await fetch(LIST_URL, {
             method: "GET",
             headers: {
-                "Authorization": token || "",
+                Authorization: token || "",
                 "Content-Type": "application/json",
             },
             cache: "no-store",
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
         if (!response.ok) {
             return NextResponse.json(
                 { message: "Failed to fetch provider orders" },
-                { status: response.status }
+                { status: response.status },
             );
         }
 
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
         console.error("Fetch error:", error);
         return NextResponse.json(
             { message: "Internal Server Error" },
-            { status: 500 }
+            { status: 500 },
         );
     }
 }
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": token || "",
+                Authorization: token || "",
             },
             body: JSON.stringify(body),
         });
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
             }
             return NextResponse.json(
                 { message: "Failed to create order", ...errorData },
-                { status: response.status }
+                { status: response.status },
             );
         }
 
@@ -68,8 +68,7 @@ export async function POST(request: Request) {
         console.error("Order API POST error:", error);
         return NextResponse.json(
             { message: "Internal server error" },
-            { status: 500 }
+            { status: 500 },
         );
     }
 }
-

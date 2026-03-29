@@ -146,7 +146,9 @@ export default function ProviderDashboardPage() {
 
     // Messaging State
     const [messages, setMessages] = useState<ProviderMessage[]>([]);
-    const [selectedRoom, setSelectedRoom] = useState<ProviderMessage | null>(null);
+    const [selectedRoom, setSelectedRoom] = useState<ProviderMessage | null>(
+        null,
+    );
     const [chatView, setChatView] = useState<ChatViewType>("lobby");
     const [messagesLoading, setMessagesLoading] = useState(false);
 
@@ -164,7 +166,7 @@ export default function ProviderDashboardPage() {
                         headers: {
                             Authorization: `Token ${token}`,
                         },
-                    }
+                    },
                 );
                 if (!response.ok)
                     throw new Error("Failed to fetch dashboard data");
@@ -189,23 +191,28 @@ export default function ProviderDashboardPage() {
 
         setMessagesLoading(true);
         try {
-            const response = await fetch("/api/providers/providerDashboard/messages/", {
-                headers: { Authorization: `Token ${token}` }
-            });
+            const response = await fetch(
+                "/api/providers/providerDashboard/messages/",
+                {
+                    headers: { Authorization: `Token ${token}` },
+                },
+            );
             if (response.ok) {
                 const data = await response.json();
-                
+
                 // Normalize message data for the UI
                 const normalizedMessages = data.map((room: any) => ({
                     id: room.id,
                     name: room.name,
                     participants_usernames: room.participants_usernames,
-                    last_message: room.last_message ? {
-                        content: room.last_message.content,
-                        timestamp: room.last_message.timestamp,
-                        sender: room.last_message.sender
-                    } : null,
-                    unread_count: room.unread_count || 0
+                    last_message: room.last_message
+                        ? {
+                              content: room.last_message.content,
+                              timestamp: room.last_message.timestamp,
+                              sender: room.last_message.sender,
+                          }
+                        : null,
+                    unread_count: room.unread_count || 0,
                 }));
 
                 setMessages(normalizedMessages);
@@ -303,9 +310,12 @@ export default function ProviderDashboardPage() {
 
         setOrdersLoading(true);
         try {
-            const response = await fetch("/api/providers/providerDashboard/order", {
-                headers: { Authorization: `Token ${token}` }
-            });
+            const response = await fetch(
+                "/api/providers/providerDashboard/order",
+                {
+                    headers: { Authorization: `Token ${token}` },
+                },
+            );
             if (response.ok) {
                 setOrders(await response.json());
             }
@@ -364,7 +374,7 @@ export default function ProviderDashboardPage() {
                 ) : null;
             case "messages":
                 return (
-                    <ProviderMessages 
+                    <ProviderMessages
                         messages={messages}
                         view={chatView}
                         selectedRoom={selectedRoom}
@@ -379,7 +389,9 @@ export default function ProviderDashboardPage() {
                     />
                 );
             case "orders":
-                return <ProviderOrders orders={orders} loading={ordersLoading} />;
+                return (
+                    <ProviderOrders orders={orders} loading={ordersLoading} />
+                );
             default:
                 return null;
         }
@@ -570,7 +582,9 @@ export default function ProviderDashboardPage() {
                 </header>
 
                 {/* Center Content Padding Area */}
-                <div className={`mx-auto w-full ${activeView === "messages" && chatView === "room" ? "p-0 h-[calc(100vh-6rem)] overflow-hidden" : "p-10 max-w-7xl"}`}>
+                <div
+                    className={`mx-auto w-full ${activeView === "messages" && chatView === "room" ? "p-0 h-[calc(100vh-6rem)] overflow-hidden" : "p-10 max-w-7xl"}`}
+                >
                     {(activeView !== "messages" || chatView !== "room") && (
                         <div className="mb-12">
                             <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-2">

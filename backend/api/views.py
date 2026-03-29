@@ -16,7 +16,7 @@ from .serializers import (
 )
 from rest_framework.authtoken.models import Token # type: ignore
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication # type: ignore
-from rest_framework.permissions import IsAuthenticated # type: ignore
+from rest_framework.permissions import IsAuthenticated, AllowAny # type: ignore
 from rest_framework.decorators import authentication_classes, permission_classes, parser_classes # type: ignore
 
 @api_view(['POST'])
@@ -544,6 +544,23 @@ def provider_services_list(request):
         )
 
     services = Service.objects.filter(provider=provider).prefetch_related('tags', 'media')
+    
+    serializer = ServiceReadSerializer(
+        services,
+        many=True,
+        context={'request': request}
+    )
+    
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def public_services_list(request):
+    """
+    GET /api/public/services/
+    Returns all active services from all providers. No authentication required.
+    """
+    services = Service.objects.filter(is_active=True).select_related('provider').prefetch_related('tags', 'media')
     
     serializer = ServiceReadSerializer(
         services,

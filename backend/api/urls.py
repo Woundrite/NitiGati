@@ -15,6 +15,7 @@ urlpatterns = [
     path("login/", views.login, name="login"),
     path("services/create/", views.service_create, name="service-create"),
     path("services/", views.provider_services_list, name="provider-services-list"),
+    path("services/public/", views.public_services_list, name="public-services-list"),
     path("services/<uuid:uuid>/", views.service_detail, name="service-detail"),
     
     # Customer Dashboard

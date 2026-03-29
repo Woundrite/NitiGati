@@ -10,14 +10,14 @@ export async function GET(request: Request) {
             cache: "no-store",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": token || "",
+                Authorization: token || "",
             },
         });
 
         if (!response.ok) {
             return NextResponse.json(
                 { message: "Failed to fetch orders" },
-                { status: response.status }
+                { status: response.status },
             );
         }
 
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
         console.error("Orders API route error:", error);
         return NextResponse.json(
             { message: "Internal server error" },
-            { status: 500 }
+            { status: 500 },
         );
     }
 }

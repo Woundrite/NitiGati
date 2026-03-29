@@ -60,8 +60,14 @@ function ProposalCard({ onAccept }: { onAccept: () => void }) {
                     {/* Deliverables */}
                     <div className="space-y-1.5">
                         {proposal.deliverables.map((item, i) => (
-                            <div key={i} className="flex items-center gap-2 text-sm font-bold text-zinc-500">
-                                <CheckCircle2 size={14} className="text-[#00E676] shrink-0" />
+                            <div
+                                key={i}
+                                className="flex items-center gap-2 text-sm font-bold text-zinc-500"
+                            >
+                                <CheckCircle2
+                                    size={14}
+                                    className="text-[#00E676] shrink-0"
+                                />
                                 {item}
                             </div>
                         ))}
@@ -69,9 +75,7 @@ function ProposalCard({ onAccept }: { onAccept: () => void }) {
 
                     {/* Action Buttons */}
                     <div className="flex items-center gap-3 pt-1">
-                        <button
-                            className="flex-1 h-10 rounded-full border border-zinc-200 text-xs font-black text-zinc-500 uppercase tracking-wider hover:border-zinc-300 hover:bg-zinc-50 transition-all"
-                        >
+                        <button className="flex-1 h-10 rounded-full border border-zinc-200 text-xs font-black text-zinc-500 uppercase tracking-wider hover:border-zinc-300 hover:bg-zinc-50 transition-all">
                             View Details
                         </button>
                         <button
@@ -100,7 +104,12 @@ interface ProviderMessageRoomProps {
     token: string;
 }
 
-export default function ProviderMessageRoom({ room, onBack, userName, token }: ProviderMessageRoomProps) {
+export default function ProviderMessageRoom({
+    room,
+    onBack,
+    userName,
+    token,
+}: ProviderMessageRoomProps) {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState("");
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -144,9 +153,12 @@ export default function ProviderMessageRoom({ room, onBack, userName, token }: P
     useEffect(() => {
         async function fetchHistory() {
             try {
-                const res = await fetch(`/api/providers/providerDashboard/messages/?room=${room.name}`, {
-                    headers: { Authorization: `Token ${token}` }
-                });
+                const res = await fetch(
+                    `/api/providers/providerDashboard/messages/?room=${room.name}`,
+                    {
+                        headers: { Authorization: `Token ${token}` },
+                    },
+                );
                 if (res.ok) {
                     const data = await res.json();
                     setMessages(data);
@@ -166,13 +178,16 @@ export default function ProviderMessageRoom({ room, onBack, userName, token }: P
         ws.onopen = () => console.log("WebSocket Connected");
         ws.onmessage = (e) => {
             const data = JSON.parse(e.data);
-            setMessages((prev) => [...prev, {
-                id: Math.random().toString(), // Temp ID
-                room: room.name,
-                sender_username: data.sender,
-                content: data.message,
-                timestamp: data.timestamp
-            }]);
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: Math.random().toString(), // Temp ID
+                    room: room.name,
+                    sender_username: data.sender,
+                    content: data.message,
+                    timestamp: data.timestamp,
+                },
+            ]);
         };
         ws.onclose = () => console.log("WebSocket Disconnected");
 
@@ -197,7 +212,8 @@ export default function ProviderMessageRoom({ room, onBack, userName, token }: P
         setInput("");
     };
 
-    const customerName = room.participants_usernames.find(u => u !== userName) || "Customer";
+    const customerName =
+        room.participants_usernames.find((u) => u !== userName) || "Customer";
 
     return (
         <div className="flex h-full bg-white border-l border-zinc-100 overflow-hidden animate-in fade-in duration-500 gap-5">
@@ -210,17 +226,28 @@ export default function ProviderMessageRoom({ room, onBack, userName, token }: P
                             onClick={onBack}
                             className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center text-zinc-400 hover:text-emerald-500 hover:bg-emerald-50 transition-all group"
                         >
-                            <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+                            <ChevronLeft
+                                size={20}
+                                className="group-hover:-translate-x-0.5 transition-transform"
+                            />
                         </button>
                         <div className="flex items-center gap-4">
                             <div className="w-11 h-11 rounded-full bg-emerald-50 overflow-hidden border border-zinc-100">
-                                <img src={`https://ui-avatars.com/api/?name=${customerName}&background=00E676&color=fff&size=100`} alt="" className="w-full h-full object-cover" />
+                                <img
+                                    src={`https://ui-avatars.com/api/?name=${customerName}&background=00E676&color=fff&size=100`}
+                                    alt=""
+                                    className="w-full h-full object-cover"
+                                />
                             </div>
                             <div>
-                                <h3 className="text-base font-black text-zinc-900 leading-none mb-1">{customerName}</h3>
+                                <h3 className="text-base font-black text-zinc-900 leading-none mb-1">
+                                    {customerName}
+                                </h3>
                                 <div className="flex items-center gap-1.5">
                                     <span className="w-1.5 h-1.5 bg-[#00E676] rounded-full animate-pulse shadow-[0_0_8px_#00E676]"></span>
-                                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Customer Portfolio</span>
+                                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                                        Customer Portfolio
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -242,37 +269,70 @@ export default function ProviderMessageRoom({ room, onBack, userName, token }: P
                 >
                     {/* Date Separator */}
                     <div className="flex justify-center">
-                        <span className="px-4 py-1 rounded-full bg-zinc-100/50 text-[9px] font-black text-zinc-400 uppercase tracking-widest">First Interaction</span>
+                        <span className="px-4 py-1 rounded-full bg-zinc-100/50 text-[9px] font-black text-zinc-400 uppercase tracking-widest">
+                            First Interaction
+                        </span>
                     </div>
 
                     {/* Order Status Notification */}
                     <div className="bg-sky-50/50 border border-sky-100/30 rounded-3xl p-6 text-center max-w-lg mx-auto shadow-sm">
-                        <p className="text-sky-900 font-bold text-sm leading-relaxed mb-1">New inquiry received for <span className="text-sky-600">&quot;Custom Logo &amp; Brand Identity&quot;</span></p>
-                        <p className="text-zinc-400 font-black text-[9px] uppercase tracking-widest italic">Awaiting your professional proposal</p>
+                        <p className="text-sky-900 font-bold text-sm leading-relaxed mb-1">
+                            New inquiry received for{" "}
+                            <span className="text-sky-600">
+                                &quot;Custom Logo &amp; Brand Identity&quot;
+                            </span>
+                        </p>
+                        <p className="text-zinc-400 font-black text-[9px] uppercase tracking-widest italic">
+                            Awaiting your professional proposal
+                        </p>
                     </div>
 
                     {/* Chat Bubbles */}
                     {messages.map((msg, idx) => {
                         const isMe = msg.sender_username === userName;
                         return (
-                            <div key={idx} className={`flex items-end gap-3 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                            <div
+                                key={idx}
+                                className={`flex items-end gap-3 ${isMe ? "flex-row-reverse" : "flex-row"}`}
+                            >
                                 {!isMe && (
                                     <div className="w-8 h-8 rounded-full bg-zinc-200 overflow-hidden shrink-0 border border-zinc-100 shadow-sm">
-                                        <img src={`https://ui-avatars.com/api/?name=${customerName}&background=00E676&color=fff`} alt="" className="w-full h-full object-cover" />
+                                        <img
+                                            src={`https://ui-avatars.com/api/?name=${customerName}&background=00E676&color=fff`}
+                                            alt=""
+                                            className="w-full h-full object-cover"
+                                        />
                                     </div>
                                 )}
                                 <div className={`max-w-[70%] group`}>
-                                    <div className={`p-5 rounded-3xl shadow-sm text-sm font-bold leading-relaxed transition-all ${isMe
-                                        ? 'bg-[#00E676] text-white rounded-br-none'
-                                        : 'bg-white text-zinc-600 border border-zinc-100 rounded-bl-none'
-                                        }`}>
+                                    <div
+                                        className={`p-5 rounded-3xl shadow-sm text-sm font-bold leading-relaxed transition-all ${
+                                            isMe
+                                                ? "bg-[#00E676] text-white rounded-br-none"
+                                                : "bg-white text-zinc-600 border border-zinc-100 rounded-bl-none"
+                                        }`}
+                                    >
                                         {msg.content}
                                     </div>
-                                    <div className={`flex items-center gap-2 px-1 mt-1.5 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                        <span className={`text-[8px] font-black uppercase tracking-widest opacity-40 italic ${isMe ? 'text-zinc-400' : 'text-zinc-300'}`}>
-                                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    <div
+                                        className={`flex items-center gap-2 px-1 mt-1.5 ${isMe ? "justify-end" : "justify-start"}`}
+                                    >
+                                        <span
+                                            className={`text-[8px] font-black uppercase tracking-widest opacity-40 italic ${isMe ? "text-zinc-400" : "text-zinc-300"}`}
+                                        >
+                                            {new Date(
+                                                msg.timestamp,
+                                            ).toLocaleTimeString([], {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            })}
                                         </span>
-                                        {isMe && <CheckCircle2 size={10} className="text-[#00E676] opacity-60" />}
+                                        {isMe && (
+                                            <CheckCircle2
+                                                size={10}
+                                                className="text-[#00E676] opacity-60"
+                                            />
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -295,7 +355,9 @@ export default function ProviderMessageRoom({ room, onBack, userName, token }: P
                                 type="text"
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                                onKeyDown={(e) =>
+                                    e.key === "Enter" && handleSend()
+                                }
                                 placeholder="Type your message..."
                                 className="w-full h-12 bg-transparent text-sm font-bold text-zinc-700 focus:outline-none placeholder:text-zinc-300 placeholder:italic"
                             />
@@ -313,7 +375,6 @@ export default function ProviderMessageRoom({ room, onBack, userName, token }: P
             {/* Right Sidebar - Order Summary Section Unified */}
             <aside className="w-[380px] hidden xl:flex shrink-0 border-l border-zinc-100 bg-white">
                 <div className="m-6 flex flex-col h-full rounded-[2rem] border border-zinc-100 shadow-sm bg-white p-6">
-
                     {/* Header */}
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-black text-zinc-900 uppercase tracking-widest">
@@ -341,7 +402,9 @@ export default function ProviderMessageRoom({ room, onBack, userName, token }: P
                         </p>
                         <div className="h-14 rounded-xl border border-zinc-100 flex items-center justify-between px-4 bg-zinc-50">
                             <span className="text-lg font-black">$540.00</span>
-                            <span className="text-[9px] text-zinc-400 uppercase">USD</span>
+                            <span className="text-[9px] text-zinc-400 uppercase">
+                                USD
+                            </span>
                         </div>
                     </div>
 
@@ -355,10 +418,16 @@ export default function ProviderMessageRoom({ room, onBack, userName, token }: P
                             {[
                                 "3 Custom Logo Concepts",
                                 "Social Media Kit",
-                                "Vector Source Files"
+                                "Vector Source Files",
                             ].map((item, i) => (
-                                <div key={i} className="flex items-center gap-2 text-sm text-zinc-600">
-                                    <CheckCircle2 size={14} className="text-[#00E676]" />
+                                <div
+                                    key={i}
+                                    className="flex items-center gap-2 text-sm text-zinc-600"
+                                >
+                                    <CheckCircle2
+                                        size={14}
+                                        className="text-[#00E676]"
+                                    />
                                     {item}
                                 </div>
                             ))}
@@ -368,33 +437,39 @@ export default function ProviderMessageRoom({ room, onBack, userName, token }: P
                     {/* Delivery + Revisions */}
                     <div className="grid grid-cols-2 gap-3 mb-5">
                         <div className="border border-zinc-100 rounded-xl py-3 text-center">
-                            <p className="text-[9px] text-zinc-400 uppercase">Delivery</p>
+                            <p className="text-[9px] text-zinc-400 uppercase">
+                                Delivery
+                            </p>
                             <p className="text-sm font-bold">5 Days</p>
                         </div>
                         <div className="border border-zinc-100 rounded-xl py-3 text-center">
-                            <p className="text-[9px] text-zinc-400 uppercase">Revisions</p>
+                            <p className="text-[9px] text-zinc-400 uppercase">
+                                Revisions
+                            </p>
                             <p className="text-sm font-bold">Unlimited</p>
                         </div>
                     </div>
 
                     {/* Bottom Section */}
                     <div className="mt-auto flex flex-col gap-3">
-
                         <div className="flex justify-between text-xs text-zinc-400">
                             <span>Service Fee (10%)</span>
                             <span>- $54.00</span>
                         </div>
 
                         <div className="flex justify-between items-center bg-[#00E676]/10 px-4 py-3 rounded-xl">
-                            <span className="text-xs font-bold">You Receive</span>
-                            <span className="text-lg font-black text-[#00E676]">$486.00</span>
+                            <span className="text-xs font-bold">
+                                You Receive
+                            </span>
+                            <span className="text-lg font-black text-[#00E676]">
+                                $486.00
+                            </span>
                         </div>
 
                         <button className="w-full h-14 bg-[#00E676] hover:bg-[#00c968] mb-2 text-white rounded-xl font-black tracking-wide">
                             Send Order Proposal
                         </button>
                     </div>
-
                 </div>
             </aside>
         </div>

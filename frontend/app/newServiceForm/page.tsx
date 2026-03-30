@@ -427,13 +427,13 @@ export default function NewServiceFormPage() {
                                 <p className="text-red-500 text-sm font-black animate-bounce">⚠️ {error}</p>
                             )}
                             <div className="w-full flex flex-col md:flex-row gap-4 ml-auto">
-                                <button
+                                {/* <button
                                     type="button"
                                     className="px-10 h-16 rounded-2xl border-2 border-zinc-100 font-black text-sm text-zinc-400 hover:bg-zinc-50 transition-all flex items-center justify-center gap-3"
                                 >
                                     <Eye size={18} />
                                     Preview
-                                </button>
+                                </button> */}
                                 <button
                                     type="submit"
                                     disabled={loading}
@@ -453,7 +453,7 @@ export default function NewServiceFormPage() {
                     </form>
 
                     {/* Pro Tip Card */}
-                    <div className="mt-20 bg-emerald-50/50 rounded-[2.5rem] p-10 border border-emerald-100 flex gap-6 relative overflow-hidden group">
+                    {/* <div className="mt-20 bg-emerald-50/50 rounded-[2.5rem] p-10 border border-emerald-100 flex gap-6 relative overflow-hidden group">
                         <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-emerald-500 shadow-sm group-hover:rotate-12 transition-transform duration-500">
                             <Plus size={24} />
                         </div>
@@ -468,7 +468,7 @@ export default function NewServiceFormPage() {
 
                     <footer className="mt-20 text-center text-[10px] font-black uppercase tracking-[0.2em] text-zinc-300 pb-20">
                         © 2024 Nitigati Marketplace. Empowering professional services worldwide.
-                    </footer>
+                    </footer> */}
                 </div>
             </main>
         </div>

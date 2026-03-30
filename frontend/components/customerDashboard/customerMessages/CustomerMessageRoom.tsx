@@ -110,14 +110,14 @@ export default function CustomerMessageRoom({ room, onBack, userName, token }: C
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    {/* <div className="flex items-center gap-2">
                         <button className="w-10 h-10 rounded-xl text-zinc-400 hover:bg-zinc-50 flex items-center justify-center transition-all">
                             <Search size={18} />
                         </button>
                         <button className="w-10 h-10 rounded-xl text-zinc-400 hover:bg-zinc-50 flex items-center justify-center transition-all">
                             <MoreVertical size={18} />
                         </button>
-                    </div>
+                    </div> */}
                 </header>
 
                 {/* Messages Container */}
@@ -179,7 +179,7 @@ export default function CustomerMessageRoom({ room, onBack, userName, token }: C
                                     <h5 className="text-2xl font-black text-zinc-900 leading-none">$540.00 <span className="text-[10px] text-zinc-300 uppercase ml-1">USD</span></h5>
                                 </div>
                             </div>
-                            <div className="space-y-3 mb-8 px-2">
+                            {/* <div className="space-y-3 mb-8 px-2">
                                 <div className="flex items-center gap-3 text-zinc-500">
                                     <CheckCircle2 size={14} className="text-[#00E676]" />
                                     <span className="text-xs font-bold">Logo + Social Media Kit</span>
@@ -188,9 +188,9 @@ export default function CustomerMessageRoom({ room, onBack, userName, token }: C
                                     <CheckCircle2 size={14} className="text-[#00E676]" />
                                     <span className="text-xs font-bold">3 Revisions</span>
                                 </div>
-                            </div>
+                            </div> */}
                             <div className="flex gap-3">
-                                <button className="flex-1 h-12 bg-white hover:bg-zinc-50 text-zinc-900 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-zinc-100">View Details</button>
+                                {/* <button className="flex-1 h-12 bg-white hover:bg-zinc-50 text-zinc-900 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-zinc-100">View Details</button> */}
                                 <button className="flex-1 h-12 bg-zinc-50 text-zinc-400 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-default">Awaiting Response</button>
                             </div>
                         </div>
@@ -200,9 +200,9 @@ export default function CustomerMessageRoom({ room, onBack, userName, token }: C
                 {/* Chat Footer / Input */}
                 <footer className="px-8 py-6 bg-white border-t border-zinc-100 shrink-0">
                     <div className="max-w-4xl mx-auto flex items-center gap-4 bg-zinc-50 rounded-full px-6 py-2 border border-zinc-100/50 shadow-inner group">
-                        <button className="w-10 h-10 rounded-full bg-white border border-zinc-100 text-zinc-400 hover:text-[#00E676] transition-all shrink-0 shadow-sm flex items-center justify-center">
+                        {/* <button className="w-10 h-10 rounded-full bg-white border border-zinc-100 text-zinc-400 hover:text-[#00E676] transition-all shrink-0 shadow-sm flex items-center justify-center">
                             <Plus size={20} />
-                        </button>
+                        </button> */}
                         <div className="flex-1">
                             <input
                                 type="text"
@@ -257,7 +257,7 @@ export default function CustomerMessageRoom({ room, onBack, userName, token }: C
                     </div>
 
                     {/* Scope */}
-                    <div className="mb-5">
+                    {/* <div className="mb-5">
                         <p className="text-[9px] font-black text-zinc-300 uppercase mb-3">
                             Scope & Deliverables
                         </p>
@@ -270,7 +270,7 @@ export default function CustomerMessageRoom({ room, onBack, userName, token }: C
                                 </div>
                             ))}
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Delivery + Revisions */}
                     <div className="grid grid-cols-2 gap-3 mb-5">

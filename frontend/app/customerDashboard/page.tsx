@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 // Components
-import Dashboard from "@/components/customerDashboard/Dashboard";
+// import Dashboard from "@/components/customerDashboard/Dashboard";
 import CustomerOrders from "@/components/customerDashboard/customerOrders/CustomerOrders";
 import CustomerTransactions from "@/components/customerDashboard/customerTransactions/CustomerTransactions";
 import CustomerMessages from "@/components/customerDashboard/customerMessages/CustomerMessages";
@@ -111,7 +111,7 @@ export interface DiscoverServicesData {
 }
 
 type ViewType =
-    | "dashboard"
+    // | "dashboard"
     | "orders"
     | "transactions"
     | "messages"
@@ -123,7 +123,8 @@ export type ChatViewType = "lobby" | "room";
 export default function CustomerDashboardPage() {
     const router = useRouter();
     const sessionManager = useSessionManager();
-    const [activeView, setActiveView] = useState<ViewType>("dashboard");
+    // const [activeView, setActiveView] = useState<ViewType>("dashboard");
+    const [activeView, setActiveView] = useState<ViewType>("discover services");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -313,15 +314,15 @@ export default function CustomerDashboardPage() {
     };
 
     const navItems = [
-        { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-        { id: "orders", label: "Orders", icon: ShoppingBag },
-        { id: "transactions", label: "Transactions", icon: History },
-        { id: "messages", label: "Messages", icon: MessageSquare },
+        // { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
         { id: "discover services", label: "Discover Services", icon: Compass },
+        { id: "orders", label: "Orders", icon: ShoppingBag },
+        // { id: "transactions", label: "Transactions", icon: History },
+        { id: "messages", label: "Messages", icon: MessageSquare },
     ];
 
     const renderContent = () => {
-        if ((loading && activeView === "dashboard") || detailLoading) {
+        if ((loading && activeView === "discover services") || detailLoading) {
             return (
                 <div className="flex items-center justify-center min-h-100">
                     <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
@@ -343,15 +344,38 @@ export default function CustomerDashboardPage() {
                 </div>
             );
         }
+    // const renderContent = () => {
+    //     if ((loading && activeView === "dashboard") || detailLoading) {
+    //         return (
+    //             <div className="flex items-center justify-center min-h-100">
+    //                 <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
+    //             </div>
+    //         );
+    //     }
+
+    //     if (error) {
+    //         return (
+    //             <div className="bg-red-50 text-red-600 p-8 rounded-4xl border border-red-100 text-center max-w-md mx-auto mt-20">
+    //                 <p className="font-black mb-4">Error loading data</p>
+    //                 <p className="text-sm font-medium mb-6">{error}</p>
+    //                 <button
+    //                     onClick={() => window.location.reload()}
+    //                     className="bg-red-600 text-white px-6 py-2 rounded-xl text-xs font-black"
+    //                 >
+    //                     Try Again
+    //                 </button>
+    //             </div>
+    //         );
+    //     }
 
         switch (activeView) {
-            case "dashboard":
-                return dashboardData ? (
-                    <Dashboard
-                        data={dashboardData}
-                        onMessageProvider={() => setActiveView("messages")}
-                    />
-                ) : null;
+            // case "dashboard":
+            //     return dashboardData ? (
+            //         <Dashboard
+            //             data={dashboardData}
+            //             onMessageProvider={() => setActiveView("messages")}
+            //         />
+            //     ) : null;
             case "orders":
                 return (
                     <CustomerOrders orders={orders} loading={ordersLoading} />
@@ -419,7 +443,7 @@ export default function CustomerDashboardPage() {
                             Nitigati
                         </span>
                         <span className="text-[10px] uppercase tracking-[0.2em] font-black text-zinc-400">
-                            Customer Client
+                            Customer
                         </span>
                     </div>
                 </Link>
@@ -495,13 +519,13 @@ export default function CustomerDashboardPage() {
                 </div>
 
                 <div className="pt-8 mt-8 border-t border-zinc-50 space-y-2">
-                    <button className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 font-bold transition-all group">
+                    {/* <button className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 font-bold transition-all group">
                         <Settings
                             size={22}
                             className="text-zinc-400 group-hover:text-emerald-500 transition-colors"
                         />
                         <span className="text-sm">Settings</span>
-                    </button>
+                    </button> */}
                     <button
                         onClick={() => {
                             sessionManager.clearToken();
@@ -530,9 +554,9 @@ export default function CustomerDashboardPage() {
                         <p className="text-xs font-black text-zinc-900 truncate">
                             {dashboardData?.user_name || "Alex Rivera"}
                         </p>
-                        <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
+                        {/* <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
                             Premium Member
-                        </p>
+                        </p> */}
                     </div>
                 </div>
             </aside>
@@ -556,7 +580,7 @@ export default function CustomerDashboardPage() {
                         />
                     </div>
 
-                    <div className="flex items-center gap-6">
+                    {/* <div className="flex items-center gap-6">
                         <button className="relative w-12 h-12 bg-white rounded-2xl border border-zinc-100 flex items-center justify-center text-zinc-400 hover:bg-emerald-50 hover:text-emerald-500 transition-all group shadow-sm">
                             <Bell
                                 size={20}
@@ -568,7 +592,7 @@ export default function CustomerDashboardPage() {
                         <span className="text-xs font-black text-zinc-400 uppercase tracking-widest">
                             Zenith Portal
                         </span>
-                    </div>
+                    </div> */}
                 </header>
 
                 <div

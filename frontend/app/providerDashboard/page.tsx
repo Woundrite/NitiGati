@@ -133,7 +133,8 @@ export type ChatViewType = "lobby" | "room";
 
 export default function ProviderDashboardPage() {
     const router = useRouter();
-    const [activeView, setActiveView] = useState<ViewType>("dashboard");
+    // const [activeView, setActiveView] = useState<ViewType>("dashboard");
+    const [activeView, setActiveView] = useState<ViewType>("services");
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -398,9 +399,9 @@ export default function ProviderDashboardPage() {
     };
 
     const navItems = [
-        { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-        { id: "messages", label: "Messages", icon: MessageSquare },
+        // { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
         { id: "services", label: "Services", icon: Briefcase },
+        { id: "messages", label: "Messages", icon: MessageSquare },
         { id: "orders", label: "Orders", icon: ShoppingBag },
     ];
 
@@ -508,13 +509,13 @@ export default function ProviderDashboardPage() {
                 </div>
 
                 <div className="pt-8 mt-8 border-t border-zinc-50 space-y-2">
-                    <button className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 font-bold transition-all group">
+                    {/* <button className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 font-bold transition-all group">
                         <Settings
                             size={22}
                             className="text-zinc-400 group-hover:text-emerald-500 transition-colors"
                         />
                         <span className="text-sm">Settings</span>
-                    </button>
+                    </button> */}
                     <Link
                         href="/login"
                         onClick={() => sessionManager.clearToken()}
@@ -541,9 +542,9 @@ export default function ProviderDashboardPage() {
                         <p className="text-xs font-black text-zinc-900 truncate">
                             Alex Rivera
                         </p>
-                        <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
+                        {/* <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
                             Pro Tier
-                        </p>
+                        </p> */}
                     </div>
                 </div>
             </aside>
@@ -552,7 +553,7 @@ export default function ProviderDashboardPage() {
             <main className="flex-1 ml-72 flex flex-col">
                 {/* Top Header */}
                 <header className="h-24 bg-white/80 backdrop-blur-md border-b border-zinc-100 px-10 flex items-center justify-between sticky top-0 z-10 transition-all">
-                    <div className="max-w-xl w-full relative group">
+                    {/* <div className="max-w-xl w-full relative group">
                         <div className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-300 group-focus-within:text-emerald-500 transition-colors">
                             <Search size={20} />
                         </div>
@@ -561,16 +562,16 @@ export default function ProviderDashboardPage() {
                             placeholder="Search orders, clients, or services..."
                             className="w-full h-12 bg-zinc-50 rounded-2xl pl-14 pr-6 border-2 border-transparent focus:border-emerald-500/20 focus:bg-white focus:ring-4 focus:ring-emerald-500/5 transition-all text-sm font-bold text-zinc-700 outline-none placeholder:text-zinc-300"
                         />
-                    </div>
+                    </div> */}
 
                     <div className="flex items-center gap-6">
-                        <button className="relative w-12 h-12 bg-white rounded-2xl border border-zinc-100 flex items-center justify-center text-zinc-400 hover:bg-emerald-50 hover:text-emerald-500 transition-all group shadow-sm">
+                        {/* <button className="relative w-12 h-12 bg-white rounded-2xl border border-zinc-100 flex items-center justify-center text-zinc-400 hover:bg-emerald-50 hover:text-emerald-500 transition-all group shadow-sm">
                             <Bell
                                 size={20}
                                 className="group-hover:rotate-12 transition-transform"
                             />
                             <span className="absolute top-3.5 right-3.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
-                        </button>
+                        </button> */}
                         <Link
                             href="/newServiceForm"
                             className="h-12 bg-emerald-500 hover:bg-emerald-600 text-white px-8 rounded-2xl flex items-center gap-3 font-black text-xs transition-all active:scale-95 shadow-lg shadow-emerald-500/20"

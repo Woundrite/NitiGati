@@ -58,10 +58,10 @@ export default function ProviderServicePage({ service, onBack, onMessageProvider
                                         <h1 className="text-3xl font-black text-zinc-900 tracking-tight">{service.title}</h1>
                                     </div>
                                     <div className="flex items-center gap-6 text-zinc-400 text-xs font-bold">
-                                        <div className="flex items-center gap-1.5 text-orange-400">
+                                        {/* <div className="flex items-center gap-1.5 text-orange-400">
                                             <Star size={14} fill="currentColor" />
                                             <span>4.9 (128 reviews)</span>
-                                        </div>
+                                        </div> */}
                                         <div className="flex items-center gap-1.5">
                                             <MapPin size={14} />
                                             <span>{service.location}</span>
@@ -69,21 +69,21 @@ export default function ProviderServicePage({ service, onBack, onMessageProvider
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex gap-2">
+                            {/* <div className="flex gap-2">
                                 <button className="w-12 h-12 bg-zinc-50 rounded-2xl flex items-center justify-center text-zinc-400 hover:bg-emerald-50 hover:text-emerald-500 transition-all border border-zinc-100/50">
                                     <Share2 size={20} />
                                 </button>
                                 <button className="w-12 h-12 bg-zinc-50 rounded-2xl flex items-center justify-center text-zinc-400 hover:bg-emerald-50 hover:text-emerald-500 transition-all border border-zinc-100/50">
                                     <Heart size={20} />
                                 </button>
-                            </div>
+                            </div> */}
                         </div>
 
                         <div className="flex items-center gap-4 border-t border-zinc-50 pt-8 mt-8">
-                            <div className="flex-1">
+                            {/* <div className="flex-1">
                                 <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 block mb-1">Status</span>
                                 <span className="text-sm font-bold text-zinc-900 capitalize">{service.verification_status}</span>
-                            </div>
+                            </div> */}
                             <div className="w-px h-8 bg-zinc-100"></div>
                             <div className="flex-1">
                                 <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-1">Published</span>
@@ -129,8 +129,8 @@ export default function ProviderServicePage({ service, onBack, onMessageProvider
                     </div>
 
                     {/* Reviews Section */}
-                    <div className="bg-white rounded-[3rem] p-10 lg:p-12 border border-zinc-100 shadow-xl shadow-zinc-200/50">
-                        <div className="flex items-center justify-between mb-10">
+                    {/* <div className="bg-white rounded-[3rem] p-10 lg:p-12 border border-zinc-100 shadow-xl shadow-zinc-200/50"> */}
+                        {/* <div className="flex items-center justify-between mb-10">
                             <div>
                                 <h3 className="text-2xl font-black text-zinc-900 tracking-tight mb-2">Customer Reviews</h3>
                                 <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
@@ -143,10 +143,10 @@ export default function ProviderServicePage({ service, onBack, onMessageProvider
                                     {[1, 2, 3, 4, 5].map(i => <Star key={i} size={14} fill="currentColor" />)}
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Sample Review */}
-                        <div className="space-y-8">
+                        {/* <div className="space-y-8">
                             {[1, 2].map((i) => (
                                 <div key={i} className="p-8 bg-zinc-50 rounded-[2rem] border border-zinc-100 shadow-sm">
                                     <div className="flex items-center justify-between mb-6">
@@ -166,8 +166,8 @@ export default function ProviderServicePage({ service, onBack, onMessageProvider
                                     </p>
                                 </div>
                             ))}
-                        </div>
-                    </div>
+                        </div> */}
+                    {/* </div> */}
                 </div>
 
                 {/* Right Column - Side Panel */}
@@ -201,7 +201,7 @@ export default function ProviderServicePage({ service, onBack, onMessageProvider
                                     <p className="text-[9px] font-bold text-zinc-400">Government ID confirmed</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-4 p-4 bg-emerald-50/30 rounded-2xl border border-emerald-100/50">
+                            {/* <div className="flex items-center gap-4 p-4 bg-emerald-50/30 rounded-2xl border border-emerald-100/50">
                                 <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
                                     <Award size={20} />
                                 </div>
@@ -209,11 +209,11 @@ export default function ProviderServicePage({ service, onBack, onMessageProvider
                                     <p className="text-xs font-black text-zinc-900 uppercase tracking-widest leading-none mb-1">Skill Badge</p>
                                     <p className="text-[9px] font-bold text-zinc-400">98% proficiency score</p>
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
 
                         {/* Metadata */}
-                        <div className="mt-12 flex items-center justify-around border-t border-zinc-50 pt-8 opacity-50">
+                        {/* <div className="mt-12 flex items-center justify-around border-t border-zinc-50 pt-8 opacity-50">
                             <button className="text-zinc-400 hover:text-emerald-500 transition-colors">
                                 <Share2 size={18} />
                             </button>
@@ -223,7 +223,7 @@ export default function ProviderServicePage({ service, onBack, onMessageProvider
                             <button className="text-zinc-400 hover:text-emerald-500 transition-colors">
                                 <MoreHorizontal size={18} />
                             </button>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>

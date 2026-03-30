@@ -58,7 +58,7 @@ function ProposalCard({ onAccept }: { onAccept: () => void }) {
                     </div>
 
                     {/* Deliverables */}
-                    <div className="space-y-1.5">
+                    {/* <div className="space-y-1.5">
                         {proposal.deliverables.map((item, i) => (
                             <div
                                 key={i}
@@ -71,13 +71,13 @@ function ProposalCard({ onAccept }: { onAccept: () => void }) {
                                 {item}
                             </div>
                         ))}
-                    </div>
+                    </div> */}
 
                     {/* Action Buttons */}
                     <div className="flex items-center gap-3 pt-1">
-                        <button className="flex-1 h-10 rounded-full border border-zinc-200 text-xs font-black text-zinc-500 uppercase tracking-wider hover:border-zinc-300 hover:bg-zinc-50 transition-all">
+                        {/* <button className="flex-1 h-10 rounded-full border border-zinc-200 text-xs font-black text-zinc-500 uppercase tracking-wider hover:border-zinc-300 hover:bg-zinc-50 transition-all">
                             View Details
-                        </button>
+                        </button> */}
                         <button
                             onClick={onAccept}
                             className="flex-1 h-10 rounded-full bg-[#00E676] hover:bg-[#00c968] text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02]"
@@ -252,14 +252,14 @@ export default function ProviderMessageRoom({
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    {/* <div className="flex items-center gap-2">
                         <button className="w-10 h-10 rounded-xl text-zinc-400 hover:bg-zinc-50 flex items-center justify-center transition-all">
                             <Search size={18} />
                         </button>
                         <button className="w-10 h-10 rounded-xl text-zinc-400 hover:bg-zinc-50 flex items-center justify-center transition-all">
                             <MoreVertical size={18} />
                         </button>
-                    </div>
+                    </div> */}
                 </header>
 
                 {/* Messages Container */}
@@ -347,9 +347,9 @@ export default function ProviderMessageRoom({
                 {/* Chat Footer / Input */}
                 <footer className="px-8 py-6 bg-white border-t border-zinc-100 shrink-0">
                     <div className="max-w-4xl mx-auto flex items-center gap-4 bg-zinc-50 rounded-full px-6 py-2 border border-zinc-100/50 shadow-inner group">
-                        <button className="w-10 h-10 rounded-full bg-white border border-zinc-100 text-zinc-400 hover:text-[#00E676] transition-all shrink-0 shadow-sm flex items-center justify-center">
+                        {/* <button className="w-10 h-10 rounded-full bg-white border border-zinc-100 text-zinc-400 hover:text-[#00E676] transition-all shrink-0 shadow-sm flex items-center justify-center">
                             <Plus size={20} />
-                        </button>
+                        </button> */}
                         <div className="flex-1">
                             <input
                                 type="text"
@@ -409,7 +409,7 @@ export default function ProviderMessageRoom({
                     </div>
 
                     {/* Scope */}
-                    <div className="mb-5">
+                    {/* <div className="mb-5">
                         <p className="text-[9px] font-black text-zinc-300 uppercase mb-3">
                             Scope & Deliverables
                         </p>
@@ -432,7 +432,7 @@ export default function ProviderMessageRoom({
                                 </div>
                             ))}
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Delivery + Revisions */}
                     <div className="grid grid-cols-2 gap-3 mb-5">

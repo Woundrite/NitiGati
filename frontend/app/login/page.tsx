@@ -67,10 +67,10 @@ export default function LoginPage() {
             const data: LoginResponse = await response.json();
             if (response.ok && data.token) {
                 sessionManager.setToken(data.token);
-                
+
                 // Dashboard Preference Redirect
                 const targetRole = data.last_active_role || data.role;
-                
+
                 if (targetRole === "provider") {
                     router.push("/providerDashboard");
                 } else {
@@ -103,13 +103,13 @@ export default function LoginPage() {
                         Nitigati
                     </span>
                 </Link>
-                <Link
+                {/* <Link
                     href="#"
                     className="text-zinc-500 hover:text-zinc-900 transition-colors flex items-center gap-2 font-medium"
                 >
                     <HelpCircle size={20} />
                     <span>Help</span>
-                </Link>
+                </Link> */}
             </header>
 
             {/* Main Content */}
@@ -253,7 +253,7 @@ export default function LoginPage() {
                                 )}
                             </button>
 
-                            <div className="text-center pt-2">
+                            {/* <div className="text-center pt-2">
                                 <p className="text-sm font-bold text-zinc-500">
                                     Don't have an account?{" "}
                                     <Link
@@ -263,7 +263,7 @@ export default function LoginPage() {
                                         Sign Up
                                     </Link>
                                 </p>
-                            </div>
+                            </div> */}
                         </form>
                     </div>
 
@@ -297,7 +297,7 @@ export default function LoginPage() {
             </main>
 
             {/* Footer */}
-            <footer className="p-8 border-t border-zinc-100 bg-white">
+            {/* <footer className="p-8 border-t border-zinc-100 bg-white">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
                     <div className="flex items-center gap-4">
                         <div className="w-8 h-8 bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-500">
@@ -350,7 +350,7 @@ export default function LoginPage() {
                         </Link>
                     </div>
                 </div>
-            </footer>
+            </footer> */}
         </div>
     );
 }

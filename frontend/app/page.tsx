@@ -407,7 +407,7 @@ export default function Home() {
                         </span>
                     </Link>
 
-                    <div className="hidden md:flex items-center gap-10">
+                    {/* <div className="hidden md:flex items-center gap-10">
                         <Link
                             href="#"
                             className="text-zinc-600 hover:text-emerald-500 transition-colors font-semibold"
@@ -420,7 +420,7 @@ export default function Home() {
                         >
                             {t.navCategories}
                         </Link>
-                    </div>
+                    </div> */}
 
                     {session.getToken() == null ? (
                         <div className="flex items-center gap-4">

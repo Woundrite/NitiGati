@@ -36,7 +36,7 @@ export default function CustomerDiscoverServices({ data, onServiceClick }: Custo
     return (
         <div className="space-y-16 pb-20">
             {/* --- FEATURED SERVICES --- */}
-            <section>
+            {/* <section>
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <h3 className="text-2xl font-black text-zinc-900 tracking-tight">Featured Services</h3>
@@ -52,7 +52,7 @@ export default function CustomerDiscoverServices({ data, onServiceClick }: Custo
                         <FeaturedCard key={service.uuid} service={service} onClick={() => onServiceClick(service.uuid)} />
                     ))}
                 </div>
-            </section>
+            </section> */}
 
             {/* --- TRENDING SERVICES --- */}
             <section>
@@ -156,20 +156,20 @@ function TrendingCard({ service, onClick }: { service: DiscoverService; onClick:
                     alt={service.title} 
                     className="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500"
                 />
-                <div className="absolute bottom-3 right-3 bg-black/40 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10">
+                {/* <div className="absolute bottom-3 right-3 bg-black/40 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10">
                     <span className="text-[9px] font-black text-white uppercase tracking-widest">{Math.floor(Math.random() * 15 + 5)}k Views</span>
-                </div>
+                </div> */}
             </div>
             
             <div className="p-6">
                 <h4 className="text-sm font-black text-zinc-800 mb-2 truncate group-hover:text-emerald-500 transition-colors uppercase tracking-tight">{service.title}</h4>
-                <div className="flex items-center gap-2 mb-4">
+                {/* <div className="flex items-center gap-2 mb-4">
                     <div className="flex items-center gap-1 text-amber-500">
                         <Star size={10} fill="currentColor" />
                         <span className="text-[10px] font-black italic">4.9</span>
                     </div>
                     <span className="text-[10px] font-bold text-zinc-300">(124)</span>
-                </div>
+                </div> */}
                 
                 <div className="flex items-center justify-between">
                     <span className="text-[9px] font-black text-zinc-300 uppercase tracking-[0.25em]">Trending</span>

@@ -37,7 +37,7 @@ export default function ProviderMessagesLobby({ messages, onSelectRoom, userName
     return (
         <div className="space-y-8">
             {/* Lobby Header/Search */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2.5rem] border border-zinc-100 shadow-lg shadow-zinc-200/30">
+            {/* <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2.5rem] border border-zinc-100 shadow-lg shadow-zinc-200/30">
                 <div className="relative flex-1 max-w-md">
                     <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-300" size={18} />
                     <input
@@ -55,7 +55,7 @@ export default function ProviderMessagesLobby({ messages, onSelectRoom, userName
                         Unread First
                     </button>
                 </div>
-            </div>
+            </div> */}
 
             {/* Message Grid */}
             <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">

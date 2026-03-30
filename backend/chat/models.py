@@ -9,6 +9,7 @@ User = get_user_model()
 class Room(models.Model):
     name = models.CharField(max_length=100, unique=True)
     participants = models.ManyToManyField(User, related_name='chat_rooms', blank=True)
+    last_service = models.ForeignKey('api.Service', on_delete=models.SET_NULL, null=True, blank=True, related_name='chat_rooms')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

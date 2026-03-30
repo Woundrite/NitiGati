@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from .models import Provider, Customer, Tag, Service, ServiceMedia, ServiceCredential, UserPreference, Order
+from .models import Provider, Customer, Tag, Service, ServiceMedia, ServiceCredential, UserPreference, Order, OrderProposal
 import json
 from .serializers import (
     ProviderCreateSerializer, ProviderImageUploadSerializer, 
@@ -12,8 +12,10 @@ from .serializers import (
     ServiceCreateSerializer, ServiceReadSerializer,
     CustomerDashboardSerializer, CustomerOrderSerializer,
     CustomerTransactionSerializer, CustomerMessageSerializer,
-    DiscoverServicesSerializer, OrderSerializer
+    DiscoverServicesSerializer, OrderSerializer, OrderProposalSerializer
 )
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from rest_framework.authtoken.models import Token # type: ignore
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication # type: ignore
 from rest_framework.permissions import IsAuthenticated, AllowAny # type: ignore
@@ -401,6 +403,257 @@ def login(request):
 @api_view(['POST'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
+def order_proposal_create(request):
+    """
+    POST /api/order-proposals/create/
+    Body: { "service": UUID, "proposed_price": Decimal, "proposed_delivery_days": Int, "sender_role": "customer"|"provider" }
+    """
+    serializer = OrderProposalSerializer(data=request.data)
+    if serializer.is_valid():
+        service_id = request.data.get('service')
+        print(f"DEBUG: Creating proposal for service ID: {service_id}")
+        
+        try:
+            service = Service.objects.get(uuid=service_id)
+        except Service.DoesNotExist:
+            print(f"DEBUG: Service with UUID {service_id} NOT FOUND.")
+            return Response({"service": [f"Invalid pk \"{service_id}\" - object does not exist."]}, status=status.HTTP_400_BAD_REQUEST)
+        
+        sender_role = serializer.validated_data.get('sender_role')
+        
+        # Resolve Customer and Provider profiles
+        customer_profile = None
+        provider_profile = service.provider
+
+        if sender_role == 'customer':
+            if not hasattr(request.user, 'customer_profile'):
+                return Response({"detail": "User has no customer profile."}, status=status.HTTP_403_FORBIDDEN)
+            customer_profile = request.user.customer_profile
+        else:
+            # If provider is sending, we need to know WHICH customer they are sending it to.
+            # In a chat context, we can infer this from the room participants.
+            room_name = request.data.get('room_name')
+            if room_name:
+                from chat.models import Room
+                room = get_object_or_404(Room, name=room_name)
+                # Find the user who IS NOT the provider
+                customer_user = room.participants.exclude(id=request.user.id).first()
+                if customer_user and hasattr(customer_user, 'customer_profile'):
+                    customer_profile = customer_user.customer_profile
+            
+            if not customer_profile:
+                return Response({"detail": "Could not resolve target customer profile. Ensure 'room_name' is valid."}, status=status.HTTP_400_BAD_REQUEST)
+
+        proposal = serializer.save(
+            customer=customer_profile,
+            provider=provider_profile,
+            service=service
+        )
+        data = OrderProposalSerializer(proposal).data
+        
+        # Broadcast via WebSocket
+        room_name = request.data.get('room_name')
+        if room_name:
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'chat_{room_name}',
+                {
+                    'type': 'new_proposal',
+                    'proposal': data
+                }
+            )
+            
+        return Response(data, status=status.HTTP_201_CREATED)
+    
+    # Log errors for debugging
+    print(f"DEBUG: OrderProposal creation failed: {serializer.errors}")
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def order_proposal_list(request):
+    """
+    GET /api/order-proposals/?room=<room_name>
+    Returns proposals for the current room participants.
+    """
+    room_name = request.query_params.get('room')
+    if not room_name:
+        return Response({"detail": "Room parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    from chat.models import Room
+    room = get_object_or_404(Room, name=room_name)
+    
+    # Verify user is in the room
+    if not room.participants.filter(id=request.user.id).exists():
+        return Response({"detail": "You are not a participant in this room."}, status=status.HTTP_403_FORBIDDEN)
+    
+    participants = room.participants.all()
+    # Get all proposals involving any two participants of this room
+    # This is a simplification; in a 2-person chat it works perfectly.
+    proposals = OrderProposal.objects.filter(
+        customer__user__in=participants,
+        provider__user__in=participants
+    ).order_by('created_at')
+    
+    serializer = OrderProposalSerializer(proposals, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def order_proposal_accept(request, proposal_id):
+    """
+    POST /api/order-proposals/<uuid:proposal_id>/accept/
+    Transitions proposal to 'accepted' and creates an Order.
+    Can be accepted by the person who RECEIVED it.
+    """
+    proposal = get_object_or_404(OrderProposal.objects.select_related('service', 'customer', 'provider'), id=proposal_id)
+    
+    if proposal.status != 'pending':
+        return Response({"detail": "This proposal is no longer pending."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Simple check: the person accepting should be the one who didn't send it.
+    # If customer sent, provider accepts. If provider sent, customer accepts.
+    is_customer = hasattr(request.user, 'customer_profile') and request.user.customer_profile == proposal.customer
+    is_provider = hasattr(request.user, 'provider_profile') and request.user.provider_profile == proposal.provider
+    
+    if proposal.sender_role == 'customer' and not is_provider:
+        return Response({"detail": "Only the provider can accept this proposal."}, status=status.HTTP_403_FORBIDDEN)
+    if proposal.sender_role == 'provider' and not is_customer:
+        return Response({"detail": "Only the customer can accept this proposal."}, status=status.HTTP_403_FORBIDDEN)
+
+    from .models import Order
+    from django.db import transaction
+
+    try:
+        with transaction.atomic():
+            proposal.status = 'accepted'
+            proposal.save()
+            
+            # Create the actual Order with proposal data
+            order = Order.objects.create(
+                customer=proposal.customer.user,
+                provider=proposal.provider.user,
+                service=proposal.service,
+                price=proposal.proposed_price,
+                delivery_days=proposal.proposed_delivery_days,
+                discount=0.00,
+                revisions=0,
+                status='pending' # Initial state of order
+            )
+            
+            # Broadcast status change via WebSocket
+            room_name = request.data.get('room_name')
+            if room_name:
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    f'chat_{room_name}',
+                    {
+                        'type': 'proposal_status_change',
+                        'proposal_id': str(proposal_id),
+                        'status': 'accepted',
+                        'message': "Proposal accepted and order created."
+                    }
+                )
+
+            return Response({
+                "detail": "Proposal accepted and order created.",
+                "order_id": str(order.order_id),
+                "proposal_status": proposal.status
+            }, status=status.HTTP_200_OK)
+            
+    except Exception as e:
+        return Response({"detail": f"Failed to accept proposal: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+    except Exception as e:
+        return Response({"detail": f"Failed to accept proposal: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def order_proposal_reject(request, proposal_id):
+    """
+    POST /api/order-proposals/<uuid:proposal_id>/reject/
+    Marks a proposal as 'rejected'.
+    """
+    proposal = get_object_or_404(OrderProposal, id=proposal_id)
+    
+    if proposal.status != 'pending':
+        return Response({"detail": "This proposal is no longer pending."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Similar permission check as accept
+    is_customer = hasattr(request.user, 'customer_profile') and request.user.customer_profile == proposal.customer
+    is_provider = hasattr(request.user, 'provider_profile') and request.user.provider_profile == proposal.provider
+    
+    if proposal.sender_role == 'customer' and not is_provider:
+        return Response({"detail": "Only the receiver can reject this proposal."}, status=status.HTTP_403_FORBIDDEN)
+    if proposal.sender_role == 'provider' and not is_customer:
+        return Response({"detail": "Only the receiver can reject this proposal."}, status=status.HTTP_403_FORBIDDEN)
+
+    proposal.status = 'rejected'
+    proposal.save()
+
+    # Broadcast status change via WebSocket
+    room_name = request.data.get('room_name')
+    if room_name:
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f'chat_{room_name}',
+            {
+                'type': 'proposal_status_change',
+                'proposal_id': str(proposal_id),
+                'status': 'rejected',
+                'message': "Proposal rejected."
+            }
+        )
+
+    return Response({"detail": "Proposal rejected.", "status": proposal.status}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def order_proposal_withdraw(request, proposal_id):
+    """
+    POST /api/order-proposals/<uuid:proposal_id>/withdraw/
+    Marks a proposal as 'withdrawn' by the sender.
+    """
+    proposal = get_object_or_404(OrderProposal, id=proposal_id)
+    
+    if proposal.status != 'pending':
+        return Response({"detail": "This proposal is no longer pending."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Permission check: must be the sender
+    is_customer = hasattr(request.user, 'customer_profile') and request.user.customer_profile == proposal.customer
+    is_provider = hasattr(request.user, 'provider_profile') and request.user.provider_profile == proposal.provider
+    
+    if proposal.sender_role == 'customer' and not is_customer:
+        return Response({"detail": "Only the sender can withdraw this proposal."}, status=status.HTTP_403_FORBIDDEN)
+    if proposal.sender_role == 'provider' and not is_provider:
+        return Response({"detail": "Only the sender can withdraw this proposal."}, status=status.HTTP_403_FORBIDDEN)
+
+    proposal.status = 'withdrawn'
+    proposal.save()
+
+    # Broadcast status change via WebSocket
+    room_name = request.data.get('room_name')
+    if room_name:
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f'chat_{room_name}',
+            {
+                'type': 'proposal_status_change',
+                'proposal_id': str(proposal_id),
+                'status': 'withdrawn',
+                'message': "Proposal withdrawn."
+            }
+        )
+
+    return Response({"detail": "Proposal withdrawn.", "status": proposal.status}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def switch_role(request):
     """
     POST /api/switch-role/
@@ -597,13 +850,10 @@ def service_detail(request, uuid):
 
     # 2. Access Control
     queryset = Service.objects.prefetch_related('tags', 'media', 'credentials')
-    print("++++++++++++++++++++++++++++++++++++++++++++++++++", queryset)
     if role == 'customer':
-        print("CUSTOMERRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
         # Unrestricted access to any service by uuid
         service = get_object_or_404(queryset, uuid=uuid)
     else:
-        print("PROVIDERRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
         # Provider role
         try:
             provider = user.provider_profile
@@ -817,3 +1067,49 @@ def order_create(request):
         )
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def get_user_roles(request):
+    """
+    GET /api/user/getRoles
+    Returns the roles associated with the authenticated user.
+    """
+    roles: list[str] = []
+    if hasattr(request.user, 'provider_profile'):
+        roles.append('provider')
+    if hasattr(request.user, 'customer_profile'):
+        roles.append('customer')
+
+    # get name from the profile if exists, else fallback to username
+    # user model has the uuid and not the username
+    if(roles):
+        if 'provider' in roles:
+            name = request.user.provider_profile.name
+        elif 'customer' in roles:
+            name = request.user.customer_profile.name
+    else:
+        name = request.user.first_name or request.user.username
+
+    # Fetch last_active_role from UserPreference
+    last_active_role = 'customer' # Default fallback
+    try:
+        pref = UserPreference.objects.get(user=request.user)
+        last_active_role = pref.last_active_role
+    except UserPreference.DoesNotExist:
+        # If no preference exists, create one with a default
+        pref = UserPreference.objects.create(
+            user=request.user, 
+            last_active_role='provider' if 'provider' in roles else 'customer'
+        )
+        last_active_role = pref.last_active_role
+
+    return Response(
+        {
+            "name": name,
+            "email": request.user.email,
+            "roles": roles,
+            "last_active_role": last_active_role
+        },
+        status=status.HTTP_200_OK
+    )

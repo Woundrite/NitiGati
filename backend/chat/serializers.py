@@ -14,10 +14,12 @@ class RoomSerializer(serializers.ModelSerializer):
     participants_usernames = serializers.SerializerMethodField()
     last_message = serializers.SerializerMethodField()
     unread_count = serializers.SerializerMethodField()
+    last_service_id = serializers.CharField(source='last_service.uuid', read_only=True)
+    last_service_title = serializers.CharField(source='last_service.title', read_only=True)
 
     class Meta:
         model = Room
-        fields = ['id', 'name', 'participants', 'participants_usernames', 'last_message', 'unread_count', 'created_at']
+        fields = ['id', 'name', 'participants', 'participants_usernames', 'last_message', 'unread_count', 'last_service_id', 'last_service_title', 'created_at']
 
     def get_participants_usernames(self, obj):
         return [user.username for user in obj.participants.all()]
@@ -33,4 +35,4 @@ class RoomSerializer(serializers.ModelSerializer):
         return None
 
     def get_unread_count(self, obj):
-        return 0
+        return 0

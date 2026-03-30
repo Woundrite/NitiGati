@@ -6,7 +6,11 @@ export async function GET(request: Request) {
     const token = request.headers.get("authorization");
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
+    
+    // Ensure we avoid trailing slash issues and construct clean URL
     const targetUrl = id ? `${BASE_URL}${id}/` : BASE_URL;
+
+    console.log(`Proxying GET to: ${targetUrl}`);
 
     try {
         const response = await fetch(targetUrl, {

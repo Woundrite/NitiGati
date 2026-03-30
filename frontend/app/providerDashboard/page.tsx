@@ -104,6 +104,8 @@ export interface ProviderMessage {
         sender: string;
     } | null;
     unread_count?: number;
+    last_service_id?: string;
+    last_service_title?: string;
 }
 
 export interface ChatMessage {
@@ -112,6 +114,24 @@ export interface ChatMessage {
     sender_username: string;
     content: string;
     timestamp: string;
+}
+
+export interface OrderProposal {
+    id: string;
+    service: string;
+    customer: string;
+    provider: string;
+    proposed_price: string;
+    proposed_delivery_days: number;
+    sender_role: "customer" | "provider";
+    status: "pending" | "accepted" | "rejected" | "withdrawn";
+    created_at: string;
+    service_title: string;
+    customer_name: string;
+    provider_name: string;
+    service_uuid: string;
+    customer_uuid: string;
+    provider_uuid: string;
 }
 
 export interface Order {
@@ -150,6 +170,7 @@ export default function ProviderDashboardPage() {
     const [selectedRoom, setSelectedRoom] = useState<ProviderMessage | null>(
         null,
     );
+    const [proposals, setProposals] = useState<OrderProposal[]>([]);
     const [chatView, setChatView] = useState<ChatViewType>("lobby");
     const [messagesLoading, setMessagesLoading] = useState(false);
 
@@ -380,13 +401,29 @@ export default function ProviderDashboardPage() {
                         view={chatView}
                         selectedRoom={selectedRoom}
                         onBackToLobby={() => setChatView("lobby")}
-                        onSelectRoom={(room: ProviderMessage) => {
+                        onSelectRoom={async (room: ProviderMessage) => {
                             setSelectedRoom(room);
                             setChatView("room");
+                            
+                            // Fetch proposals for this room
+                            const token = sessionManager.getToken();
+                            if (!token) return;
+                            try {
+                                const res = await fetch(`/api/providers/providerDashboard/messages?room=${room.name}&type=proposals`, {
+                                    headers: { Authorization: `Token ${token}` }
+                                });
+                                if (res.ok) {
+                                    setProposals(await res.json());
+                                }
+                            } catch (err) {
+                                console.error("Error fetching proposals:", err);
+                            }
                         }}
                         userName={data?.user_name || ""}
                         token={sessionManager.getToken() || ""}
                         loading={messagesLoading}
+                        proposals={proposals}
+                        availableServiceId={services.length > 0 ? services[0].id : undefined}
                     />
                 );
             case "orders":
@@ -406,6 +443,15 @@ export default function ProviderDashboardPage() {
     ];
 
     const sessionManager = useSessionManager();
+    let userData = null;
+
+    if (userData === null) {
+        let details = sessionManager.getDetails();
+        if (details) {
+            console.log("Fetched user details:", details);
+            userData = details;
+        }
+    }
 
     return (
         <div className="min-h-screen bg-[#f8fafb] font-sans selection:bg-emerald-100 selection:text-emerald-900 flex">
@@ -426,7 +472,6 @@ export default function ProviderDashboardPage() {
                         </span>
                     </div>
                 </Link>
-
                 <nav className="space-y-2 flex-1">
                     {navItems.map((item) => (
                         <button
@@ -464,7 +509,6 @@ export default function ProviderDashboardPage() {
                         </button>
                     ))}
                 </nav>
-
                 <div className="mt-8 space-y-2">
                     <button
                         onClick={async () => {
@@ -480,7 +524,9 @@ export default function ProviderDashboardPage() {
                                         "Content-Type": "application/json",
                                         Authorization: `Token ${token}`,
                                     },
-                                    body: JSON.stringify({ role: "customer" }),
+                                    body: JSON.stringify({
+                                        role: "customer",
+                                    }),
                                 });
                                 if (res.ok) {
                                     router.push("/customerDashboard");
@@ -507,7 +553,7 @@ export default function ProviderDashboardPage() {
                         <span className="text-sm">Switch to Customer</span>
                     </button>
                 </div>
-
+                )
                 <div className="pt-8 mt-8 border-t border-zinc-50 space-y-2">
                     {/* <button className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 font-bold transition-all group">
                         <Settings
@@ -528,7 +574,6 @@ export default function ProviderDashboardPage() {
                         <span className="text-sm">Logout</span>
                     </Link>
                 </div>
-
                 {/* User Mini Profile */}
                 <div className="mt-12 flex items-center gap-4 p-2 bg-zinc-50/50 rounded-2xl border border-zinc-100/50">
                     <div className="w-12 h-12 bg-zinc-200 rounded-xl overflow-hidden border-2 border-white shadow-sm">

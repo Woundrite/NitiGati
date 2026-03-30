@@ -15,26 +15,19 @@ import {
     ArrowUpRight,
     ChevronDown,
 } from "lucide-react";
-import { ProviderMessage, ChatMessage } from "@/app/providerDashboard/page";
+import { ProviderMessage, ChatMessage, OrderProposal } from "@/app/providerDashboard/page";
+import { toast } from "@/components/ui/toast";
 
 /* ────────────────────────────────────────────────────────────
    Inline Proposal Card – renders inside chat as a customer message
    ──────────────────────────────────────────────────────────── */
-function ProposalCard({ onAccept }: { onAccept: () => void }) {
-    // ─── START: Sample order hardcoded data ───
-    const proposal = {
-        title: "Proposal Received",
-        price: "$540.00 USD",
-        deliverables: ["Logo + Social Media Kit", "3 Revisions"],
-    };
-    // ─── END: Sample order hardcoded data ───
-
+function ProposalCard({ onAccept, proposal }: { onAccept: () => void; proposal: OrderProposal }) {
     return (
         <div className="flex items-end gap-3 flex-row">
             {/* Avatar placeholder (matches customer bubble style) */}
             <div className="w-8 h-8 rounded-full bg-zinc-200 overflow-hidden shrink-0 border border-zinc-100 shadow-sm">
                 <img
-                    src="https://ui-avatars.com/api/?name=Customer&background=00E676&color=fff"
+                    src={`https://ui-avatars.com/api/?name=${proposal.customer_name || "Customer"}&background=00E676&color=fff`}
                     alt=""
                     className="w-full h-full object-cover"
                 />
@@ -49,47 +42,31 @@ function ProposalCard({ onAccept }: { onAccept: () => void }) {
                         </div>
                         <div>
                             <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">
-                                {proposal.title}
+                                {proposal.service_title}
                             </p>
                             <p className="text-lg font-black text-zinc-900 leading-tight">
-                                {proposal.price}
+                                ${proposal.proposed_price}
                             </p>
                         </div>
                     </div>
 
-                    {/* Deliverables */}
-                    {/* <div className="space-y-1.5">
-                        {proposal.deliverables.map((item, i) => (
-                            <div
-                                key={i}
-                                className="flex items-center gap-2 text-sm font-bold text-zinc-500"
-                            >
-                                <CheckCircle2
-                                    size={14}
-                                    className="text-[#00E676] shrink-0"
-                                />
-                                {item}
-                            </div>
-                        ))}
-                    </div> */}
-
-                    {/* Action Buttons */}
                     <div className="flex items-center gap-3 pt-1">
-                        {/* <button className="flex-1 h-10 rounded-full border border-zinc-200 text-xs font-black text-zinc-500 uppercase tracking-wider hover:border-zinc-300 hover:bg-zinc-50 transition-all">
-                            View Details
-                        </button> */}
+                        <div className="flex-1 h-10 rounded-full border border-zinc-200 flex items-center justify-center text-[10px] font-black text-zinc-500 uppercase tracking-wider">
+                           {proposal.proposed_delivery_days} Days Delivery
+                        </div>
                         <button
                             onClick={onAccept}
-                            className="flex-1 h-10 rounded-full bg-[#00E676] hover:bg-[#00c968] text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02]"
+                            disabled={proposal.status !== 'pending'}
+                            className={`flex-1 h-10 rounded-full ${proposal.status === 'pending' ? 'bg-[#00E676] hover:bg-[#00c968] cursor-pointer' : 'bg-zinc-100 text-zinc-400 cursor-not-allowed'} text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02]`}
                         >
-                            Accept
+                            {proposal.status === 'pending' ? 'Accept' : proposal.status.toUpperCase()}
                         </button>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-2 px-1 mt-1.5 justify-start">
                     <span className="text-[8px] font-black uppercase tracking-widest opacity-40 italic text-zinc-300">
-                        Proposal
+                        Proposal from {proposal.sender_role}
                     </span>
                 </div>
             </div>
@@ -102,6 +79,9 @@ interface ProviderMessageRoomProps {
     onBack: () => void;
     userName: string;
     token: string;
+    proposals: OrderProposal[];
+    serviceId?: string;
+    serviceTitle?: string;
 }
 
 export default function ProviderMessageRoom({
@@ -109,43 +89,136 @@ export default function ProviderMessageRoom({
     onBack,
     userName,
     token,
+    proposals: initialProposals,
+    serviceId: propServiceId,
+    serviceTitle: propServiceTitle
 }: ProviderMessageRoomProps) {
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const [timeline, setTimeline] = useState<(ChatMessage | OrderProposal)[]>([]);
     const [input, setInput] = useState("");
     const scrollRef = useRef<HTMLDivElement>(null);
     const socketRef = useRef<WebSocket | null>(null);
 
-    // ─── Accept Proposal → Create Order ───
-    const handleAcceptOrder = async () => {
-        // ─── START: Sample order hardcoded data ───
-        const orderPayload = {
-            price: "540.00",
-            discount: "0.00",
-            delivery_days: 5,
-            revisions: 3,
-            signature: `accepted-by-${userName}`,
-            room_name: room.name,
-        };
-        // ─── END: Sample order hardcoded data ───
+    // Local state to capture context if props are missing
+    const [localServiceContext, setLocalServiceContext] = useState<{ id: string; title: string } | null>(null);
 
+    // Proposal Form State
+    const [proposedPrice, setProposedPrice] = useState("540.00");
+    const [proposedDelivery, setProposedDelivery] = useState(5);
+    const [isSendingProposal, setIsSendingProposal] = useState(false);
+    const [isAcceptingProposal, setIsAcceptingProposal] = useState<string | null>(null);
+    const [isProcessingProposal, setIsProcessingProposal] = useState<string | null>(null);
+
+    // Effect to update local context from room if needed
+    useEffect(() => {
+        if (room.last_service_id && room.last_service_title && !propServiceId) {
+            setLocalServiceContext({
+                id: room.last_service_id,
+                title: room.last_service_title
+            });
+        }
+    }, [room, propServiceId]);
+
+    const serviceId = propServiceId || localServiceContext?.id;
+    const serviceTitle = propServiceTitle || localServiceContext?.title || "Custom Logo & Brand Identity";
+
+    const handleSendProposal = async () => {
+        if (isSendingProposal) return;
+        if (!serviceId) {
+            toast.error("Set up at least one service to send proposals.");
+            return;
+        }
+        setIsSendingProposal(true);
         try {
-            const res = await fetch("/api/providers/providerDashboard/order/", {
+            const res = await fetch("/api/providers/providerDashboard/messages", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Token ${token}`,
                 },
-                body: JSON.stringify(orderPayload),
+                body: JSON.stringify({
+                    service: serviceId,
+                    proposed_price: parseFloat(proposedPrice),
+                    proposed_delivery_days: proposedDelivery,
+                    sender_role: "provider",
+                    room_name: room.name,
+                }),
             });
 
-            const data = await res.json();
             if (res.ok) {
-                console.log("orderplaced", data);
+                toast.success("Proposal sent to customer!");
+                if (socketRef.current) {
+                    socketRef.current.send(JSON.stringify({ 
+                        message: `I've sent a counter-proposal for $${proposedPrice} with ${proposedDelivery} days delivery.` 
+                    }));
+                }
             } else {
-                console.error("Order creation failed:", res.status, data);
+                const err = await res.json();
+                toast.error(err.detail || (err.service ? "Invalid Service Selected" : "Failed to send proposal"));
             }
-        } catch (err) {
-            console.error("Order API error:", err);
+        } catch (error) {
+            console.error("Proposal send error:", error);
+            toast.error("An error occurred while sending proposal");
+        } finally {
+            setIsSendingProposal(false);
+        }
+    };
+
+    const handleAcceptProposal = async (proposalId: string) => {
+        if (isAcceptingProposal) return;
+        setIsAcceptingProposal(proposalId);
+        try {
+            const res = await fetch("/api/providers/providerDashboard/messages", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Token ${token}`,
+                },
+                body: JSON.stringify({
+                    proposal_id: proposalId,
+                    action: 'accept',
+                    room_name: room.name
+                }),
+            });
+
+            if (res.ok) {
+                toast.success("Proposal accepted! Order created.");
+                // Broadcast handled by backend
+            } else {
+                const err = await res.json();
+                toast.error(err.detail || "Failed to accept proposal");
+            }
+        } catch (error) {
+            console.error("Proposal accept error:", error);
+            toast.error("An error occurred while accepting proposal");
+        } finally {
+            setIsAcceptingProposal(null);
+        }
+    };
+
+    const handleWithdrawProposal = async (proposalId: string) => {
+        if (isProcessingProposal) return;
+        setIsProcessingProposal(proposalId);
+        try {
+            const res = await fetch(`/api/order-proposals/${proposalId}/withdraw/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Token ${token}`,
+                },
+                body: JSON.stringify({ room_name: room.name })
+            });
+
+            if (res.ok) {
+                toast.success("Proposal withdrawn.");
+            } else {
+                const err = await res.json();
+                toast.error(err.detail || "Failed to withdraw proposal");
+            }
+        } catch (error) {
+            console.error("Proposal withdraw error:", error);
+            toast.error("An error occurred while withdrawing proposal");
+        } finally {
+            setIsProcessingProposal(null);
         }
     };
 
@@ -160,15 +233,15 @@ export default function ProviderMessageRoom({
                     },
                 );
                 if (res.ok) {
-                    const data = await res.json();
-                    setMessages(data);
+                    const messagesData = await res.json();
+                    setTimeline([...messagesData, ...(initialProposals || [])]);
                 }
             } catch (err) {
                 console.error("Failed to fetch history:", err);
             }
         }
         fetchHistory();
-    }, [room.name, token]);
+    }, [room.name, token, initialProposals]);
 
     // WebSocket setup
     useEffect(() => {
@@ -178,7 +251,24 @@ export default function ProviderMessageRoom({
         ws.onopen = () => console.log("WebSocket Connected");
         ws.onmessage = (e) => {
             const data = JSON.parse(e.data);
-            setMessages((prev) => [
+
+            if (data.type === 'new_proposal') {
+                setTimeline((prev) => [...prev, data.proposal]);
+                return;
+            }
+
+            if (data.type === 'proposal_status_change') {
+                setTimeline((prev) => 
+                    prev.map(item => 
+                        ('proposed_price' in item && item.id === data.proposal_id)
+                        ? { ...item, status: data.status }
+                        : item
+                    )
+                );
+                return;
+            }
+
+            setTimeline((prev) => [
                 ...prev,
                 {
                     id: Math.random().toString(), // Temp ID
@@ -186,7 +276,7 @@ export default function ProviderMessageRoom({
                     sender_username: data.sender,
                     content: data.message,
                     timestamp: data.timestamp,
-                },
+                } as ChatMessage,
             ]);
         };
         ws.onclose = () => console.log("WebSocket Disconnected");
@@ -203,12 +293,15 @@ export default function ProviderMessageRoom({
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [messages]);
+    }, [timeline]);
 
     const handleSend = () => {
         const socket = socketRef.current;
         if (!input.trim() || !socket) return;
-        socket.send(JSON.stringify({ message: input }));
+        socket.send(JSON.stringify({ 
+            message: input,
+            service_id: serviceId !== "00000000-0000-0000-0000-000000000000" && serviceId ? serviceId : null
+        }));
         setInput("");
     };
 
@@ -270,78 +363,99 @@ export default function ProviderMessageRoom({
                     {/* Date Separator */}
                     <div className="flex justify-center">
                         <span className="px-4 py-1 rounded-full bg-zinc-100/50 text-[9px] font-black text-zinc-400 uppercase tracking-widest">
-                            First Interaction
+                            Today
                         </span>
                     </div>
 
-                    {/* Order Status Notification */}
-                    <div className="bg-sky-50/50 border border-sky-100/30 rounded-3xl p-6 text-center max-w-lg mx-auto shadow-sm">
-                        <p className="text-sky-900 font-bold text-sm leading-relaxed mb-1">
-                            New inquiry received for{" "}
-                            <span className="text-sky-600">
-                                &quot;Custom Logo &amp; Brand Identity&quot;
-                            </span>
-                        </p>
-                        <p className="text-zinc-400 font-black text-[9px] uppercase tracking-widest italic">
-                            Awaiting your professional proposal
-                        </p>
-                    </div>
-
-                    {/* Chat Bubbles */}
-                    {messages.map((msg, idx) => {
-                        const isMe = msg.sender_username === userName;
-                        return (
-                            <div
-                                key={idx}
-                                className={`flex items-end gap-3 ${isMe ? "flex-row-reverse" : "flex-row"}`}
-                            >
-                                {!isMe && (
-                                    <div className="w-8 h-8 rounded-full bg-zinc-200 overflow-hidden shrink-0 border border-zinc-100 shadow-sm">
-                                        <img
-                                            src={`https://ui-avatars.com/api/?name=${customerName}&background=00E676&color=fff`}
-                                            alt=""
-                                            className="w-full h-full object-cover"
-                                        />
-                                    </div>
-                                )}
-                                <div className={`max-w-[70%] group`}>
-                                    <div
-                                        className={`p-5 rounded-3xl shadow-sm text-sm font-bold leading-relaxed transition-all ${
-                                            isMe
-                                                ? "bg-[#00E676] text-white rounded-br-none"
-                                                : "bg-white text-zinc-600 border border-zinc-100 rounded-bl-none"
-                                        }`}
-                                    >
-                                        {msg.content}
-                                    </div>
-                                    <div
-                                        className={`flex items-center gap-2 px-1 mt-1.5 ${isMe ? "justify-end" : "justify-start"}`}
-                                    >
-                                        <span
-                                            className={`text-[8px] font-black uppercase tracking-widest opacity-40 italic ${isMe ? "text-zinc-400" : "text-zinc-300"}`}
-                                        >
-                                            {new Date(
-                                                msg.timestamp,
-                                            ).toLocaleTimeString([], {
-                                                hour: "2-digit",
-                                                minute: "2-digit",
-                                            })}
-                                        </span>
-                                        {isMe && (
-                                            <CheckCircle2
-                                                size={10}
-                                                className="text-[#00E676] opacity-60"
-                                            />
+                    {/* Chat Bubbles & Proposals */}
+                    {timeline
+                        .sort((a, b) => {
+                            const timeA = 'created_at' in a ? new Date(a.created_at).getTime() : new Date((a as ChatMessage).timestamp).getTime();
+                            const timeB = 'created_at' in b ? new Date(b.created_at).getTime() : new Date((b as ChatMessage).timestamp).getTime();
+                            return timeA - timeB;
+                        })
+                        .map((item, idx) => {
+                            // Check if it's a proposal
+                            if ('proposed_price' in item) {
+                                const proposal = item as OrderProposal;
+                                const isMe = (proposal.sender_role === 'provider');
+                                return (
+                                    <div key={`prop-${idx}`} className={`flex items-end gap-3 ${isMe ? 'flex-row-reverse' : 'flex-row'} px-2`}>
+                                        {!isMe && (
+                                            <div className="w-8 h-8 rounded-full bg-zinc-200 overflow-hidden shrink-0 border border-zinc-100 shadow-sm">
+                                                <img src={`https://ui-avatars.com/api/?name=${proposal.customer_name}&background=00E676&color=fff`} alt="" className="w-full h-full object-cover" />
+                                            </div>
                                         )}
+                                        <div className={`max-w-[85%] bg-white p-8 rounded-[2.5rem] ${isMe ? 'rounded-br-none' : 'rounded-bl-none'} border-2 border-dashed border-zinc-100 shadow-xl overflow-hidden group`}>
+                                            <div className="flex items-center gap-5 mb-8">
+                                                <div className="w-14 h-14 bg-[#00E676]/5 text-[#00E676] rounded-2xl flex items-center justify-center shadow-inner ring-1 ring-[#00E676]/10">
+                                                    <FileText size={24} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] font-black text-zinc-300 uppercase tracking-widest mb-1 italic">
+                                                        Proposal from {proposal.sender_role}
+                                                    </p>
+                                                    <h5 className="text-2xl font-black text-zinc-900 leading-none">
+                                                        ${proposal.proposed_price} <span className="text-[10px] text-zinc-300 uppercase ml-1">USD</span>
+                                                    </h5>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-3">
+                                                <div className="flex-1 h-12 border border-zinc-100 flex items-center justify-center text-zinc-400 rounded-xl text-[10px] font-black uppercase tracking-widest">
+                                                    {proposal.proposed_delivery_days} Days Delivery
+                                                </div>
+                                                {proposal.status === 'pending' ? (
+                                                    <div className="flex-1 flex gap-2">
+                                                        <button 
+                                                            onClick={() => !isMe ? handleAcceptProposal(proposal.id) : handleWithdrawProposal(proposal.id)}
+                                                            disabled={isAcceptingProposal === proposal.id || isProcessingProposal === proposal.id}
+                                                            className={`flex-[2] h-12 ${isMe ? 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200' : 'bg-[#00E676] hover:bg-[#00c968] text-white shadow-lg shadow-emerald-500/20'} rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center`}
+                                                        >
+                                                            {(isAcceptingProposal === proposal.id || isProcessingProposal === proposal.id) && <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>}
+                                                            {isMe ? 'Withdraw' : 'Accept Proposal'}
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className={`flex-1 h-12 ${
+                                                        proposal.status === 'accepted' ? 'bg-emerald-50 text-emerald-600' : 
+                                                        proposal.status === 'rejected' ? 'bg-rose-50 text-rose-500' : 'bg-zinc-100 text-zinc-500'
+                                                    } flex items-center justify-center rounded-xl text-[10px] font-black uppercase tracking-widest border border-current/10`}>
+                                                        {proposal.status.toUpperCase()}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            // It's a message
+                            const msg = item as ChatMessage;
+                            const isMe = msg.sender_username === userName;
+                            return (
+                                <div key={`msg-${idx}`} className={`flex items-end gap-3 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                                    {!isMe && (
+                                        <div className="w-8 h-8 rounded-full bg-zinc-200 overflow-hidden shrink-0 border border-zinc-100 shadow-sm">
+                                            <img src={`https://ui-avatars.com/api/?name=${customerName}&background=00E676&color=fff`} alt="" className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
+                                    <div className={`max-w-[70%] group`}>
+                                        <div className={`p-5 rounded-3xl shadow-sm text-sm font-bold leading-relaxed transition-all ${isMe
+                                                ? 'bg-[#00E676] text-white rounded-br-none'
+                                                : 'bg-white text-zinc-600 border border-zinc-100 rounded-bl-none'
+                                            }`}>
+                                            {msg.content}
+                                        </div>
+                                        <div className={`flex items-center gap-2 px-1 mt-1.5 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                            <span className={`text-[8px] font-black uppercase tracking-widest opacity-40 italic ${isMe ? 'text-zinc-400' : 'text-zinc-300'}`}>
+                                                {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                            {isMe && <CheckCircle2 size={10} className="text-[#00E676] opacity-60" />}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        );
-                    })}
-
-                    {/* ─── START: Hardcoded Proposal Card (sample order data) ─── */}
-                    <ProposalCard onAccept={handleAcceptOrder} />
-                    {/* ─── END: Hardcoded Proposal Card (sample order data) ─── */}
+                            );
+                        })}
                 </div>
 
                 {/* Chat Footer / Input */}
@@ -398,55 +512,41 @@ export default function ProviderMessageRoom({
                     {/* Price */}
                     <div className="mb-5">
                         <p className="text-[9px] font-black text-zinc-300 uppercase mb-2">
-                            Proposed Price
+                            Proposed Price ($)
                         </p>
-                        <div className="h-14 rounded-xl border border-zinc-100 flex items-center justify-between px-4 bg-zinc-50">
-                            <span className="text-lg font-black">$540.00</span>
-                            <span className="text-[9px] text-zinc-400 uppercase">
+                        <div className="h-14 rounded-xl border border-zinc-100 flex items-center justify-between px-4 bg-zinc-50 focus-within:ring-2 focus-within:ring-[#00E676] transition-all">
+                            <input
+                                type="number"
+                                step="0.01"
+                                value={proposedPrice}
+                                onChange={(e) => setProposedPrice(e.target.value)}
+                                className="w-full bg-transparent text-lg font-black outline-none"
+                            />
+                            <span className="text-[9px] text-zinc-400 uppercase shrink-0">
                                 USD
                             </span>
                         </div>
                     </div>
 
-                    {/* Scope */}
-                    {/* <div className="mb-5">
-                        <p className="text-[9px] font-black text-zinc-300 uppercase mb-3">
-                            Scope & Deliverables
-                        </p>
-
-                        <div className="space-y-2">
-                            {[
-                                "3 Custom Logo Concepts",
-                                "Social Media Kit",
-                                "Vector Source Files",
-                            ].map((item, i) => (
-                                <div
-                                    key={i}
-                                    className="flex items-center gap-2 text-sm text-zinc-600"
-                                >
-                                    <CheckCircle2
-                                        size={14}
-                                        className="text-[#00E676]"
-                                    />
-                                    {item}
-                                </div>
-                            ))}
-                        </div>
-                    </div> */}
-
                     {/* Delivery + Revisions */}
                     <div className="grid grid-cols-2 gap-3 mb-5">
-                        <div className="border border-zinc-100 rounded-xl py-3 text-center">
+                        <div className="border border-zinc-100 rounded-xl py-3 text-center focus-within:ring-2 focus-within:ring-[#00E676] transition-all bg-zinc-50/30">
                             <p className="text-[9px] text-zinc-400 uppercase">
-                                Delivery
+                                Delivery (Days)
                             </p>
-                            <p className="text-sm font-bold">5 Days</p>
+                            <input
+                                type="number"
+                                min="1"
+                                value={proposedDelivery}
+                                onChange={(e) => setProposedDelivery(parseInt(e.target.value) || 1)}
+                                className="w-full bg-transparent text-sm font-bold text-center outline-none"
+                            />
                         </div>
-                        <div className="border border-zinc-100 rounded-xl py-3 text-center">
+                        <div className="border border-zinc-100 rounded-xl py-3 text-center bg-zinc-50/50">
                             <p className="text-[9px] text-zinc-400 uppercase">
                                 Revisions
                             </p>
-                            <p className="text-sm font-bold">Unlimited</p>
+                            <p className="text-sm font-bold text-zinc-400">Fixed (3)</p>
                         </div>
                     </div>
 
@@ -454,20 +554,25 @@ export default function ProviderMessageRoom({
                     <div className="mt-auto flex flex-col gap-3">
                         <div className="flex justify-between text-xs text-zinc-400">
                             <span>Service Fee (10%)</span>
-                            <span>- $54.00</span>
+                            <span>- ${(parseFloat(proposedPrice) * 0.1 || 0).toFixed(2)}</span>
                         </div>
 
-                        <div className="flex justify-between items-center bg-[#00E676]/10 px-4 py-3 rounded-xl">
+                        <div className="flex justify-between items-center bg-[#00E676]/10 px-4 py-3 rounded-xl ring-1 ring-[#00E676]/20">
                             <span className="text-xs font-bold">
                                 You Receive
                             </span>
                             <span className="text-lg font-black text-[#00E676]">
-                                $486.00
+                                ${(parseFloat(proposedPrice) * 0.9 || 0).toFixed(2)}
                             </span>
                         </div>
 
-                        <button className="w-full h-14 bg-[#00E676] hover:bg-[#00c968] mb-2 text-white rounded-xl font-black tracking-wide">
-                            Send Order Proposal
+                        <button 
+                            onClick={handleSendProposal}
+                            disabled={isSendingProposal}
+                            className={`w-full h-14 bg-[#00E676] hover:bg-[#00c968] mb-2 text-white rounded-xl font-black tracking-wide shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 ${isSendingProposal ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        >
+                            {isSendingProposal && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>}
+                            {isSendingProposal ? 'SENDING...' : 'SEND ORDER PROPOSAL'}
                         </button>
                     </div>
                 </div>

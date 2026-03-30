@@ -12,17 +12,27 @@ import {
     User,
     Share2,
     Heart,
-    MoreHorizontal
+    MoreHorizontal,
 } from "lucide-react";
 import { ServiceDetail } from "@/app/providerDashboard/page";
-
+import { useSessionManager } from "@/components/Auth/SessionManager";
 interface ProviderServicePageProps {
     service: ServiceDetail;
     onBack: () => void;
     onMessageProvider: (providerId: string) => void;
 }
 
-export default function ProviderServicePage({ service, onBack, onMessageProvider }: ProviderServicePageProps) {
+export default function ProviderServicePage({
+    service,
+    onBack,
+    onMessageProvider,
+}: ProviderServicePageProps) {
+    const sessionManager = useSessionManager();
+    const userData = sessionManager.getDetails();
+
+    // Check if user is currently accessing in Provider mode
+    const isAccessingAsProvider = userData?.last_active_role === "provider";
+
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Back Button */}
@@ -30,8 +40,13 @@ export default function ProviderServicePage({ service, onBack, onMessageProvider
                 onClick={onBack}
                 className="flex items-center gap-2 text-zinc-400 hover:text-emerald-500 transition-colors mb-10 group"
             >
-                <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Back to Listings</span>
+                <ChevronLeft
+                    size={20}
+                    className="group-hover:-translate-x-1 transition-transform"
+                />
+                <span className="text-[10px] font-black uppercase tracking-widest">
+                    Back to Listings
+                </span>
             </button>
 
             <div className="grid lg:grid-cols-3 gap-10">
@@ -55,7 +70,9 @@ export default function ProviderServicePage({ service, onBack, onMessageProvider
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-3 mb-2">
-                                        <h1 className="text-3xl font-black text-zinc-900 tracking-tight">{service.title}</h1>
+                                        <h1 className="text-3xl font-black text-zinc-900 tracking-tight">
+                                            {service.title}
+                                        </h1>
                                     </div>
                                     <div className="flex items-center gap-6 text-zinc-400 text-xs font-bold">
                                         {/* <div className="flex items-center gap-1.5 text-orange-400">
@@ -86,26 +103,36 @@ export default function ProviderServicePage({ service, onBack, onMessageProvider
                             </div> */}
                             <div className="w-px h-8 bg-zinc-100"></div>
                             <div className="flex-1">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-1">Published</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-1">
+                                    Published
+                                </span>
                                 <span className="text-sm font-bold text-zinc-900">
-                                    {new Date(service.created_at).toLocaleDateString('en-US', { 
-                                        month: 'short', 
-                                        day: 'numeric', 
-                                        year: 'numeric' 
+                                    {new Date(
+                                        service.created_at,
+                                    ).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric",
                                     })}
                                 </span>
                             </div>
                             <div className="w-px h-8 bg-zinc-100"></div>
                             <div className="flex-1">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-1">Pricing</span>
-                                <span className="text-sm font-bold text-zinc-900">{service.price_range}</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-1">
+                                    Pricing
+                                </span>
+                                <span className="text-sm font-bold text-zinc-900">
+                                    {service.price_range}
+                                </span>
                             </div>
                         </div>
                     </div>
 
                     {/* Description Section - REPLACING Offered Services */}
                     <div className="bg-white rounded-[3rem] p-10 lg:p-12 border border-zinc-100 shadow-xl shadow-zinc-200/50">
-                        <h3 className="text-2xl font-black text-zinc-900 mb-8 tracking-tight">Service Description</h3>
+                        <h3 className="text-2xl font-black text-zinc-900 mb-8 tracking-tight">
+                            Service Description
+                        </h3>
                         <p className="text-zinc-500 font-medium leading-relaxed whitespace-pre-line text-lg">
                             {service.description}
                         </p>
@@ -114,15 +141,24 @@ export default function ProviderServicePage({ service, onBack, onMessageProvider
                     {/* Gallery Section */}
                     <div className="bg-white rounded-[3rem] p-10 lg:p-12 border border-zinc-100 shadow-xl shadow-zinc-200/50">
                         <div className="flex items-center justify-between mb-8">
-                            <h3 className="text-2xl font-black text-zinc-900 tracking-tight">Work Gallery</h3>
+                            <h3 className="text-2xl font-black text-zinc-900 tracking-tight">
+                                Work Gallery
+                            </h3>
                             <button className="text-[10px] font-black uppercase tracking-widest text-emerald-500 hover:text-emerald-600 transition-colors">
                                 View Full Portfolio
                             </button>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                             {service.images.map((img, idx) => (
-                                <div key={idx} className="aspect-[4/3] rounded-[2rem] overflow-hidden border border-zinc-100 group shadow-sm transition-transform hover:-translate-y-1">
-                                    <img src={img} alt="Gallery item" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                <div
+                                    key={idx}
+                                    className="aspect-[4/3] rounded-[2rem] overflow-hidden border border-zinc-100 group shadow-sm transition-transform hover:-translate-y-1"
+                                >
+                                    <img
+                                        src={img}
+                                        alt="Gallery item"
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                    />
                                 </div>
                             ))}
                         </div>
@@ -130,7 +166,7 @@ export default function ProviderServicePage({ service, onBack, onMessageProvider
 
                     {/* Reviews Section */}
                     {/* <div className="bg-white rounded-[3rem] p-10 lg:p-12 border border-zinc-100 shadow-xl shadow-zinc-200/50"> */}
-                        {/* <div className="flex items-center justify-between mb-10">
+                    {/* <div className="flex items-center justify-between mb-10">
                             <div>
                                 <h3 className="text-2xl font-black text-zinc-900 tracking-tight mb-2">Customer Reviews</h3>
                                 <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
@@ -145,8 +181,8 @@ export default function ProviderServicePage({ service, onBack, onMessageProvider
                             </div>
                         </div> */}
 
-                        {/* Sample Review */}
-                        {/* <div className="space-y-8">
+                    {/* Sample Review */}
+                    {/* <div className="space-y-8">
                             {[1, 2].map((i) => (
                                 <div key={i} className="p-8 bg-zinc-50 rounded-[2rem] border border-zinc-100 shadow-sm">
                                     <div className="flex items-center justify-between mb-6">
@@ -174,31 +210,45 @@ export default function ProviderServicePage({ service, onBack, onMessageProvider
                 <div className="space-y-8">
                     {/* Pricing Card */}
                     <div className="bg-white rounded-[3rem] p-10 border border-zinc-100 shadow-xl shadow-zinc-200/50 sticky top-32">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-2">Pricing Starts From</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-2">
+                            Pricing Starts From
+                        </span>
                         <div className="flex items-baseline gap-2 mb-10">
-                            <h4 className="text-2xl font-black text-zinc-900 tracking-tight">{service.price_range.split(" - ")[0]}</h4>
+                            <h4 className="text-2xl font-black text-zinc-900 tracking-tight">
+                                {service.price_range.split(" - ")[0]}
+                            </h4>
                         </div>
 
                         <div className="space-y-4">
-                            <button 
-                                onClick={() => onMessageProvider(service.provider_id)}
-                                className="w-full h-16 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl flex items-center justify-center gap-3 font-black text-sm uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
-                            >
-                                <MessageSquare size={20} />
-                                Message Provider
-                            </button>
+                            {!isAccessingAsProvider && (
+                                <button
+                                    onClick={() =>
+                                        onMessageProvider(service.provider_id)
+                                    }
+                                    className="w-full h-16 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl flex items-center justify-center gap-3 font-black text-sm uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+                                >
+                                    <MessageSquare size={20} />
+                                    Message Provider
+                                </button>
+                            )}
                         </div>
 
                         {/* Verification List */}
                         <div className="mt-12 space-y-4">
-                            <h5 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-4 px-2">Trust Verification</h5>
+                            <h5 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-4 px-2">
+                                Trust Verification
+                            </h5>
                             <div className="flex items-center gap-4 p-4 bg-emerald-50/30 rounded-2xl border border-emerald-100/50">
                                 <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
                                     <ShieldCheck size={20} />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-black text-zinc-900 uppercase tracking-widest leading-none mb-1">ID Verified</p>
-                                    <p className="text-[9px] font-bold text-zinc-400">Government ID confirmed</p>
+                                    <p className="text-xs font-black text-zinc-900 uppercase tracking-widest leading-none mb-1">
+                                        ID Verified
+                                    </p>
+                                    <p className="text-[9px] font-bold text-zinc-400">
+                                        Government ID confirmed
+                                    </p>
                                 </div>
                             </div>
                             {/* <div className="flex items-center gap-4 p-4 bg-emerald-50/30 rounded-2xl border border-emerald-100/50">

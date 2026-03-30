@@ -1,7 +1,7 @@
 import React from "react";
 import CustomerMessagesLobby from "./CustomerMessagesLobby";
 import CustomerMessageRoom from "./CustomerMessageRoom";
-import { CustomerMessage, ChatViewType } from "@/app/customerDashboard/page";
+import { CustomerMessage, ChatViewType, OrderProposal } from "@/app/customerDashboard/page";
 
 interface CustomerMessagesProps {
     messages: CustomerMessage[];
@@ -12,6 +12,8 @@ interface CustomerMessagesProps {
     userName: string;
     token: string;
     onExploreServices: () => void;
+    proposals: OrderProposal[];
+    serviceContext: { id: string; title: string } | null;
 }
 
 export default function CustomerMessages({
@@ -23,6 +25,8 @@ export default function CustomerMessages({
     userName,
     token,
     onExploreServices,
+    proposals,
+    serviceContext
 }: CustomerMessagesProps) {
     if (view === "lobby") {
         return (
@@ -42,6 +46,8 @@ export default function CustomerMessages({
                 onBack={onBackToLobby}
                 userName={userName}
                 token={token}
+                proposals={proposals}
+                serviceContext={serviceContext}
             />
         );
     }

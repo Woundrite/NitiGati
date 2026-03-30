@@ -6,9 +6,13 @@ export async function GET(request: Request) {
     const token = request.headers.get("authorization");
     const { searchParams } = new URL(request.url);
     const roomName = searchParams.get("room");
+    const type = searchParams.get("type");
 
     let url = `${BACKEND_URL}/rooms/`;
-    if (roomName) {
+
+    if (type === "proposals" && roomName) {
+        url = `http://127.0.0.1:8000/api/order-proposals/?room=${roomName}`;
+    } else if (roomName) {
         url = `${BACKEND_URL}/messages/?room=${roomName}`;
     }
 
@@ -43,7 +47,64 @@ export async function POST(request: Request) {
     const token = request.headers.get("authorization");
     const body = await request.json();
 
-    // Re-use logic for initiating a chat if necessary (e.g., from an order page)
+    // 1. If it's accepting a proposal
+    if (body.proposal_id && body.action === 'accept') {
+        const url = `http://127.0.0.1:8000/api/order-proposals/${body.proposal_id}/accept/`;
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: token || "",
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                return NextResponse.json(errorData, { status: response.status });
+            }
+
+            const data = await response.json();
+            return NextResponse.json(data);
+        } catch (error) {
+            console.error("Order Proposal Accept Proxy POST error:", error);
+            return NextResponse.json(
+                { message: "Internal server error" },
+                { status: 500 }
+            );
+        }
+    }
+
+    // 2. If it's creating an order proposal
+    if (body.proposed_price) {
+        const url = "http://127.0.0.1:8000/api/order-proposals/create/";
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: token || "",
+                },
+                body: JSON.stringify(body),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                return NextResponse.json(errorData, { status: response.status });
+            }
+
+            const data = await response.json();
+            return NextResponse.json(data);
+        } catch (error) {
+            console.error("Order Proposal Proxy POST error:", error);
+            return NextResponse.json(
+                { message: "Internal server error" },
+                { status: 500 }
+            );
+        }
+    }
+
+    // 2. Re-use logic for initiating a chat if necessary
     const url = `${BACKEND_URL}/rooms/get_or_create_room/`;
     try {
         const response = await fetch(url, {

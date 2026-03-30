@@ -54,11 +54,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         data = json.loads(text_data)
         message = data.get('message')
+        service_id = data.get('service_id')
+        
         if not message:
             return
             
         user = self.scope['user']
-        saved = await self.save_message(user, self.room_name, message)
+        saved = await self.save_message(user, self.room_name, message, service_id)
 
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -67,6 +69,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'message': message,
                 'sender': user.username,
                 'timestamp': str(saved.timestamp),
+                'service_id': service_id,
             }
         )
 
@@ -75,12 +78,37 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'message': event['message'],
             'sender': event['sender'],
             'timestamp': event['timestamp'],
+            'service_id': event.get('service_id'),
+        }))
+
+    async def new_proposal(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'new_proposal',
+            'proposal': event['proposal'],
+        }))
+
+    async def proposal_status_change(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'proposal_status_change',
+            'proposal_id': event['proposal_id'],
+            'status': event['status'],
+            'message': event.get('message', '')
         }))
 
     @database_sync_to_async
-    def save_message(self, user, room_name, message):
+    def save_message(self, user, room_name, message, service_id=None):
         room = Room.objects.get(name=room_name)
-        return Message.objects.create(room=room, sender=user, content=message)
+        msg = Message.objects.create(room=room, sender=user, content=message)
+        
+        if service_id:
+            from api.models import Service
+            try:
+                service = Service.objects.get(uuid=service_id)
+                room.last_service = service
+                room.save()
+            except Service.DoesNotExist:
+                pass
+        return msg
 
     @database_sync_to_async
     def check_participation(self, user, room_name):

@@ -2,7 +2,7 @@
 import React from "react";
 import ProviderMessagesLobby from "./ProviderMessagesLobby";
 import ProviderMessageRoom from "./ProviderMessageRoom";
-import { ProviderMessage, ChatViewType } from "@/app/providerDashboard/page";
+import { ProviderMessage, ChatViewType, OrderProposal } from "@/app/providerDashboard/page";
 
 interface ProviderMessagesProps {
     messages: ProviderMessage[];
@@ -13,6 +13,8 @@ interface ProviderMessagesProps {
     userName: string;
     token: string;
     loading: boolean;
+    proposals: OrderProposal[];
+    availableServiceId?: string;
 }
 
 export default function ProviderMessages({
@@ -23,7 +25,9 @@ export default function ProviderMessages({
     onSelectRoom,
     userName,
     token,
-    loading
+    loading,
+    proposals,
+    availableServiceId
 }: ProviderMessagesProps) {
     if (view === "lobby") {
         return (
@@ -43,6 +47,8 @@ export default function ProviderMessages({
                 onBack={onBackToLobby}
                 userName={userName}
                 token={token}
+                proposals={proposals}
+                serviceId={availableServiceId}
             />
         );
     }

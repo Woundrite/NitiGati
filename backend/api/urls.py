@@ -14,9 +14,9 @@ urlpatterns = [
     path("provider-dashboard/summary/", views.provider_dashboard_summary, name="provider-dashboard-summary"),
     path("login/", views.login, name="login"),
     path("services/create/", views.service_create, name="service-create"),
-    path("services/", views.provider_services_list, name="provider-services-list"),
     path("services/public/", views.public_services_list, name="public-services-list"),
     path("services/<uuid:uuid>/", views.service_detail, name="service-detail"),
+    path("services/", views.provider_services_list, name="provider-services-list"),
     
     # Customer Dashboard
     path("customer/dashboard/", views.customer_dashboard_summary, name="customer-dashboard-summary"),
@@ -30,4 +30,14 @@ urlpatterns = [
 
     # Orders
     path("orders/create/", views.order_create, name="order-create"),
+
+    # Order Proposals
+    path("order-proposals/create/", views.order_proposal_create, name="order-proposal-create"),
+    path("order-proposals/", views.order_proposal_list, name="order-proposal-list"),
+    path("order-proposals/<uuid:proposal_id>/accept/", views.order_proposal_accept, name="order-proposal-accept"),
+    path("order-proposals/<uuid:proposal_id>/reject/", views.order_proposal_reject, name="order-proposal-reject"),
+    path("order-proposals/<uuid:proposal_id>/withdraw/", views.order_proposal_withdraw, name="order-proposal-withdraw"),
+
+    # Get Roles
+	path("user/get-roles", views.get_user_roles, name="get-user-roles"),
 ]

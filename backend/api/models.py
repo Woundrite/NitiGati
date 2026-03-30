@@ -158,3 +158,27 @@ class Order(models.Model):
     def __str__(self):
         return f"Order {self.order_id} - {self.customer} -> {self.provider}"
 
+class OrderProposal(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+        ('withdrawn', 'Withdrawn'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='proposals')
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='proposals')
+    provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name='proposals')
+    
+    proposed_price = models.DecimalField(max_digits=10, decimal_places=2)
+    proposed_delivery_days = models.PositiveIntegerField()
+
+    sender_role = models.CharField(max_length=10, choices=[('customer', 'Customer'), ('provider', 'Provider')], default='customer')
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Proposal {self.id} for {self.service.title} by {self.customer.name}"

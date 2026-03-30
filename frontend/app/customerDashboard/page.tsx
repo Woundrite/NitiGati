@@ -79,6 +79,8 @@ export interface CustomerMessage {
     };
     unread_count: number;
     created_at: string;
+    last_service_id?: string;
+    last_service_title?: string;
 }
 
 export interface ChatMessage {
@@ -87,6 +89,24 @@ export interface ChatMessage {
     sender_username: string;
     content: string;
     timestamp: string;
+}
+
+export interface OrderProposal {
+    id: string;
+    service: string;
+    customer: string;
+    provider: string;
+    proposed_price: string;
+    proposed_delivery_days: number;
+    sender_role: "customer" | "provider";
+    status: "pending" | "accepted" | "rejected" | "withdrawn";
+    created_at: string;
+    service_title: string;
+    customer_name: string;
+    provider_name: string;
+    service_uuid: string;
+    customer_uuid: string;
+    provider_uuid: string;
 }
 
 export interface DiscoverService {
@@ -139,16 +159,31 @@ export default function CustomerDashboardPage() {
         useState<DiscoverServicesData | null>(null);
     const [selectedService, setSelectedService] =
         useState<ServiceDetail | null>(null);
+    const [selectedServiceContext, setSelectedServiceContext] = useState<{
+        id: string;
+        title: string;
+    } | null>(null);
     const [detailLoading, setDetailLoading] = useState(false);
 
     // Messaging State
     const [selectedRoom, setSelectedRoom] = useState<CustomerMessage | null>(
         null,
     );
+    const [proposals, setProposals] = useState<OrderProposal[]>([]);
     const [chatView, setChatView] = useState<ChatViewType>("lobby");
     const [msgBackView, setMsgBackView] = useState<ViewType | "lobby" | null>(
         null,
     );
+
+    let userData = null;
+
+    if (userData === null) {
+        let details = sessionManager.getDetails();
+        if (details) {
+            console.log("Fetched user details:", details);
+            userData = details;
+        }
+    }
 
     // Redirect if not logged in
     useEffect(() => {
@@ -272,6 +307,7 @@ export default function CustomerDashboardPage() {
             };
 
             setSelectedService(mappedService);
+            setSelectedServiceContext({ id: mappedService.id, title: mappedService.title });
             setActiveView("service Detail");
             setMsgBackView(null); // Reset when navigating to Detail
         } catch (err) {
@@ -344,29 +380,29 @@ export default function CustomerDashboardPage() {
                 </div>
             );
         }
-    // const renderContent = () => {
-    //     if ((loading && activeView === "dashboard") || detailLoading) {
-    //         return (
-    //             <div className="flex items-center justify-center min-h-100">
-    //                 <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
-    //             </div>
-    //         );
-    //     }
+        // const renderContent = () => {
+        //     if ((loading && activeView === "dashboard") || detailLoading) {
+        //         return (
+        //             <div className="flex items-center justify-center min-h-100">
+        //                 <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
+        //             </div>
+        //         );
+        //     }
 
-    //     if (error) {
-    //         return (
-    //             <div className="bg-red-50 text-red-600 p-8 rounded-4xl border border-red-100 text-center max-w-md mx-auto mt-20">
-    //                 <p className="font-black mb-4">Error loading data</p>
-    //                 <p className="text-sm font-medium mb-6">{error}</p>
-    //                 <button
-    //                     onClick={() => window.location.reload()}
-    //                     className="bg-red-600 text-white px-6 py-2 rounded-xl text-xs font-black"
-    //                 >
-    //                     Try Again
-    //                 </button>
-    //             </div>
-    //         );
-    //     }
+        //     if (error) {
+        //         return (
+        //             <div className="bg-red-50 text-red-600 p-8 rounded-4xl border border-red-100 text-center max-w-md mx-auto mt-20">
+        //                 <p className="font-black mb-4">Error loading data</p>
+        //                 <p className="text-sm font-medium mb-6">{error}</p>
+        //                 <button
+        //                     onClick={() => window.location.reload()}
+        //                     className="bg-red-600 text-white px-6 py-2 rounded-xl text-xs font-black"
+        //                 >
+        //                     Try Again
+        //                 </button>
+        //             </div>
+        //         );
+        //     }
 
         switch (activeView) {
             // case "dashboard":
@@ -395,15 +431,31 @@ export default function CustomerDashboardPage() {
                                 setChatView("lobby");
                             }
                         }}
-                        onSelectRoom={(room) => {
+                        onSelectRoom={async (room) => {
                             setSelectedRoom(room);
                             setChatView("room");
+                            
+                            // Fetch proposals for this room
+                            if (!sessionManager.isLoggedIn) return;
+                            const token = sessionManager.getToken();
+                            try {
+                                const res = await fetch(`/api/customer/customerDashboard/messages?room=${room.name}&type=proposals`, {
+                                    headers: { Authorization: `Token ${token}` }
+                                });
+                                if (res.ok) {
+                                    setProposals(await res.json());
+                                }
+                            } catch (err) {
+                                console.error("Error fetching proposals:", err);
+                            }
                         }}
                         userName={dashboardData?.user_name || ""}
                         token={sessionManager.getToken() || ""}
                         onExploreServices={() =>
                             handleViewChange("discover services")
                         }
+                        proposals={proposals}
+                        serviceContext={selectedServiceContext}
                     />
                 );
             case "discover services":
@@ -491,7 +543,9 @@ export default function CustomerDashboardPage() {
                                         "Content-Type": "application/json",
                                         Authorization: `Token ${token}`,
                                     },
-                                    body: JSON.stringify({ role: "provider" }),
+                                    body: JSON.stringify({
+                                        role: "provider",
+                                    }),
                                 });
 
                                 if (res.ok) {

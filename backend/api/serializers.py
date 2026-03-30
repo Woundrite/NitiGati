@@ -375,4 +375,25 @@ class OrderSerializer(serializers.ModelSerializer):
             return delivery_dt.strftime('%b %d, %Y')
         return None
 
+from .models import OrderProposal
+
+class OrderProposalSerializer(serializers.ModelSerializer):
+    service_title = serializers.CharField(source='service.title', read_only=True)
+    customer_name = serializers.CharField(source='customer.name', read_only=True)
+    provider_name = serializers.CharField(source='provider.name', read_only=True)
+    service_uuid = serializers.UUIDField(source='service.uuid', read_only=True)
+    customer_uuid = serializers.UUIDField(source='customer.uuid', read_only=True)
+    provider_uuid = serializers.UUIDField(source='provider.uuid', read_only=True)
+
+    class Meta:
+        model = OrderProposal
+        fields = [
+            'id', 'service', 'customer', 'provider',
+            'proposed_price', 'proposed_delivery_days',
+            'sender_role', 'status', 'created_at', 'updated_at',
+            'service_title', 'customer_name', 'provider_name',
+            'service_uuid', 'customer_uuid', 'provider_uuid',
+        ]
+        read_only_fields = ['id', 'customer', 'provider', 'status', 'created_at', 'updated_at']
+
 
